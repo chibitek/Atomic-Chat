@@ -11,9 +11,10 @@ import { useNavigate } from '@tanstack/react-router'
 import { useThreads } from '@/hooks/useThreads'
 import { useModelProvider } from '@/hooks/useModelProvider'
 import { useMessages } from '@/hooks/useMessages'
-import { useAppState } from '@/hooks/useAppState'
+import { defaultModel } from '@/lib/models'
 import { useChatSessions } from '@/stores/chat-session-store'
 import { useComposerSend } from '@/stores/composer-send-store'
+import { defaultModel } from '@/lib/models'
 
 export function DesktopLayout({ children }: { children?: React.ReactNode }) {
   const navigate = useNavigate()
@@ -47,8 +48,8 @@ export function DesktopLayout({ children }: { children?: React.ReactNode }) {
   const handleNewChat = async () => {
     const model = selectedModel
       ? { id: selectedModel.id, provider: selectedProvider }
-      : undefined
-    const thread = await createThread(model as ThreadModel | undefined, 'New Chat')
+      : { id: defaultModel(selectedProvider), provider: selectedProvider }
+    const thread = await createThread(model, 'New Chat')
     setCurrentThreadId(thread.id)
     navigate({ to: '/threads/$threadId', params: { threadId: thread.id } })
   }
@@ -104,7 +105,6 @@ export function DesktopLayout({ children }: { children?: React.ReactNode }) {
   }, [providers])
 
   const currentModelLabel = selectedModel?.name || selectedModel?.id || 'Select Model'
-  const currentProviderLabel = selectedProvider || ''
 
   return (
     <div className="win">
