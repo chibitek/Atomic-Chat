@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atomic Chat — iOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;540;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/atomic.css">
+<script>(function(){var t=localStorage.getItem("atomic-theme");if(["light","dark","clear","tinted"].indexOf(t)>=0)document.documentElement.setAttribute("data-theme",t);else if(matchMedia("(prefers-color-scheme:dark)").matches)document.documentElement.setAttribute("data-theme","dark");})();</script>
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2.5rem 1rem; gap: 2rem; flex-wrap: wrap; }
+
+  .phone {
+    width: 390px; height: 844px; flex: none; position: relative;
+    border-radius: 56px; overflow: hidden;
+    box-shadow: 0 0 0 12px #0c0c0e, 0 0 0 14px #2a2a2e, 0 40px 90px -30px rgba(0,0,0,0.6);
+  }
+  /* the app's own refracted backdrop, inside the device */
+  .screen-bg { position: absolute; inset: 0; background: var(--backdrop); }
+  .screen-bg::after {
+    content: ""; position: absolute; inset: -20%;
+    background: radial-gradient(45% 45% at 70% 30%, var(--drift), transparent 70%);
+    opacity: 0.5; filter: blur(50px);
+    animation: drift 30s var(--ease) infinite alternate;
+  }
+  .island { position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 124px; height: 36px; background: #000; border-radius: 99px; z-index: 60; }
+  .statusbar { position: absolute; top: 0; left: 0; right: 0; height: 54px; z-index: 55;
+    display: flex; align-items: center; justify-content: space-between; padding: 16px 32px 0; font-size: 0.86rem; font-weight: 600; color: var(--fg); }
+  .statusbar .sb-r { display: flex; gap: 6px; align-items: center; }
+  .home-ind { position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%); width: 140px; height: 5px; border-radius: 99px; background: var(--fg); opacity: 0.55; z-index: 60; }
+  .screen { position: absolute; inset: 0; padding-top: 54px; display: flex; flex-direction: column; }
+
+  /* glass nav bar */
+  .navbar {
+    flex: none; display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.5rem 0.55rem;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(180%);
+    backdrop-filter: blur(var(--blur-lg)) saturate(180%);
+    border-bottom: 1px solid rgba(var(--border-rgb), var(--border-o));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,var(--hi-o));
+  }
+  .nav-ic {
+    width: 2.35rem; height: 2.35rem; border-radius: 50%; flex: none;
+    display: flex; align-items: center; justify-content: center; color: var(--fg);
+    transition: background 0.2s var(--ease), transform 0.14s var(--spring);
+  }
+  .nav-ic:active { background: rgba(var(--glass-rgb), var(--glass-o-active)); transform: scale(0.92); }
+  .nav-ic svg { width: 1.35rem; height: 1.35rem; }
+  .nav-model { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.05rem; }
+  .nav-model .nm-pill {
+    display: flex; align-items: center; gap: 0.35rem; font-size: 0.92rem; font-weight: 600;
+    padding: 0.2rem 0.7rem; border-radius: 99px;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    transition: background 0.2s;
+  }
+  .nav-model .nm-pill:active { background: rgba(var(--glass-rgb), var(--glass-o-active)); }
+  .nav-model .nm-pill svg { width: 0.8rem; height: 0.8rem; color: var(--fg-3); }
+  .nav-model .nm-sub { font-size: 0.68rem; color: var(--fg-2); display: flex; align-items: center; gap: 0.3rem; }
+
+  /* messages */
+  .ios-msgs { flex: 1; overflow-y: auto; padding: 1rem 1rem 0.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  .pull-hint { text-align: center; font-size: 0.72rem; color: var(--fg-2); padding-bottom: 0.4rem; }
+  .imsg { animation: msg-in 0.3s var(--spring); }
+  @keyframes msg-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes drift { 0%{ transform: translate3d(-4%,-3%,0) scale(1); } 100%{ transform: translate3d(5%,4%,0) scale(1.18); } }
+
+  /* user bubble — blue-tinted glass, pointed corner */
+  .imsg.user { align-self: flex-end; max-width: 82%; }
+  .imsg.user .bubble {
+    background: rgba(var(--accent-rgb), 0.32);
+    -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(170%);
+    backdrop-filter: blur(var(--blur-sm)) saturate(170%);
+    border: 1px solid rgba(var(--accent-rgb), 0.4);
+    color: #fff;
+    padding: 0.62rem 0.9rem; border-radius: 1.2rem 1.2rem 0.4rem 1.2rem;
+    font-size: 0.92rem; line-height: 1.5;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 18px -8px rgba(var(--accent-rgb), 0.5);
+  }
+  /* ai bubble — neutral glass */
+  .imsg.ai { align-self: flex-start; max-width: 92%; }
+  .imsg.ai .ai-name { font-size: 0.74rem; font-weight: 600; color: var(--fg-2); margin: 0 0 0.3rem 0.2rem; display: flex; align-items: center; gap: 0.35rem; }
+  .imsg.ai .bubble {
+    background: rgba(var(--glass-rgb), var(--glass-o-strong));
+    -webkit-backdrop-filter: blur(var(--blur-md)) saturate(185%);
+    backdrop-filter: blur(var(--blur-md)) saturate(185%);
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    padding: 0.72rem 0.9rem; border-radius: 1.2rem 1.2rem 1.2rem 0.4rem;
+    font-size: 0.92rem; line-height: 1.55;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,var(--hi-o)), 0 8px 22px -12px rgba(0,0,0,var(--shadow-o));
+  }
+  .imsg.ai .bubble p + p { margin-top: 0.55rem; }
+  .imsg .stamp { font-size: 0.66rem; color: var(--fg-2); margin: 0.25rem 0.3rem 0; display: flex; align-items: center; gap: 0.3rem; }
+  .imsg.user .stamp { justify-content: flex-end; }
+
+  .code {
+    margin: 0.6rem -0.2rem; border-radius: 0.6rem; overflow: hidden;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .code-head { display: flex; align-items: center; justify-content: space-between; padding: 0.34rem 0.6rem; background: rgba(var(--glass-rgb), var(--glass-o-thin)); border-bottom: 1px solid rgba(var(--border-rgb), var(--border-o)); }
+  .code-lang { font-family: var(--font-mono); font-size: 0.68rem; color: var(--fg-2); }
+  .code pre { padding: 0.6rem; overflow-x: auto; }
+  .code code { font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.6; }
+  .tok-k { color: rgb(var(--info)); } .tok-s { color: rgb(var(--success)); } .tok-c { color: var(--fg-3); font-style: italic; }
+  .copy-btn { display: flex; align-items: center; gap: 0.25rem; font-size: 0.66rem; color: var(--fg-2); }
+  .copy-btn svg { width: 0.75rem; height: 0.75rem; }
+
+  .tool { margin: 0.55rem 0; border-radius: 0.6rem; overflow: hidden;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin)); border: 1px solid rgba(var(--border-rgb), var(--border-o)); }
+  .tool-head { display: flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.6rem; font-size: 0.78rem; }
+  .tool-head .t-name { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; }
+  .tool-body { padding: 0.45rem 0.6rem; border-top: 1px solid rgba(var(--border-rgb), var(--border-o)); font-family: var(--font-mono); font-size: 0.68rem; color: var(--fg-2); }
+
+  .imsg.ai .acts { display: flex; gap: 0.85rem; margin: 0.4rem 0 0 0.3rem; }
+  .imsg.ai .acts button { color: var(--fg-2); display: flex; }
+  .imsg.ai .acts svg { width: 1rem; height: 1rem; }
+  .imsg.ai .acts button.on { color: rgb(var(--accent-rgb)); }
+
+  .typing { display: inline-flex; gap: 0.2rem; }
+  .typing i { width: 0.36rem; height: 0.36rem; border-radius: 99px; background: var(--fg-3); animation: blink 1.2s infinite; }
+  .typing i:nth-child(2){ animation-delay: .2s; } .typing i:nth-child(3){ animation-delay: .4s; }
+  @keyframes blink { 0%,80%,100%{opacity:.25;} 40%{opacity:1;} }
+  .cursor { display: inline-block; width: 2px; height: 1em; background: rgb(var(--accent-rgb)); vertical-align: -2px; animation: blink 1s steps(2) infinite; }
+
+  /* glass composer */
+  .ios-composer {
+    flex: none; padding: 0.5rem 0.7rem calc(0.7rem + var(--safe-bottom));
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(180%);
+    backdrop-filter: blur(var(--blur-lg)) saturate(180%);
+    border-top: 1px solid rgba(var(--border-rgb), var(--border-o));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,var(--hi-o));
+  }
+  .ic-row { display: flex; align-items: flex-end; gap: 0.4rem; }
+  .ic-tools { display: flex; }
+  .ic-tools .nav-ic { width: 2.15rem; height: 2.15rem; }
+  .ic-input {
+    flex: 1; display: flex; align-items: flex-end; gap: 0.3rem;
+    background: rgba(var(--glass-rgb), var(--glass-o));
+    border: 1px solid rgba(var(--border-rgb), calc(var(--border-o) + 0.06));
+    border-radius: 1.4rem; padding: 0.3rem 0.3rem 0.3rem 0.9rem;
+    transition: border-color 0.2s;
+  }
+  .ic-input:focus-within { border-color: rgba(var(--accent-rgb), 0.55); }
+  .ic-input textarea {
+    flex: 1; border: none; background: none; outline: none; resize: none;
+    font-size: 0.95rem; line-height: 1.4; padding: 0.34rem 0; max-height: 96px;
+    font-family: var(--font-sans); color: var(--fg);
+  }
+  .ic-input textarea::placeholder { color: var(--fg-3); }
+  .ic-send {
+    width: 2.05rem; height: 2.05rem; border-radius: 50%; flex: none;
+    background: rgba(var(--accent-rgb), 0.95); color: #fff;
+    border: 1px solid rgba(var(--accent-rgb), 0.5);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: opacity .15s, transform .12s var(--spring);
+  }
+  .ic-send:active { transform: scale(0.9); }
+  .ic-send:disabled { opacity: 0.32; }
+  .ic-send svg { width: 1rem; height: 1rem; }
+  .ic-mic { width: 2.4rem; height: 2.4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--fg); flex: none; }
+  .ic-mic svg { width: 1.3rem; height: 1.3rem; }
+
+  /* glass bottom sheets */
+  .scrim {
+    position: absolute; inset: 0; z-index: 70;
+    background: rgba(0,0,0,0.35); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    opacity: 0; pointer-events: none; transition: opacity 0.28s var(--ease);
+  }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 80;
+    border-radius: 1.6rem 1.6rem 0 0;
+    background: rgba(var(--glass-rgb), var(--glass-o-strong));
+    -webkit-backdrop-filter: blur(var(--blur-xl)) saturate(190%);
+    backdrop-filter: blur(var(--blur-xl)) saturate(190%);
+    border: 1px solid rgba(var(--border-rgb), calc(var(--border-o) + 0.05));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,var(--hi-o)), 0 -16px 50px -12px rgba(0,0,0,0.5);
+    transform: translateY(100%);
+    transition: transform 0.34s var(--spring);
+    max-height: 78%; display: flex; flex-direction: column;
+    padding-bottom: var(--safe-bottom);
+  }
+  .sheet.open { transform: none; }
+  .grabber { width: 2.4rem; height: 0.32rem; border-radius: 99px; background: rgba(var(--border-rgb), calc(var(--border-o) + 0.3)); margin: 0.6rem auto 0.2rem; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1.1rem 0.5rem; }
+  .sheet-head h3 { font-size: 1.05rem; }
+  .sheet-body { overflow-y: auto; padding: 0.4rem 0.85rem 1.1rem; }
+
+  .sheet-search {
+    margin: 0 0.25rem 0.6rem; display: flex; align-items: center; gap: 0.5rem;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    border-radius: 99px; padding: 0 0.85rem; height: 2.5rem;
+  }
+  .sheet-search input { flex: 1; border: none; background: none; outline: none; font-size: 0.9rem; color: var(--fg); }
+  .sheet-search input::placeholder { color: var(--fg-3); }
+  .sheet-search svg { width: 1rem; height: 1rem; color: var(--fg-3); }
+
+  .sgroup { font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); padding: 0.7rem 0.5rem 0.35rem; }
+  .srow {
+    display: flex; align-items: center; gap: 0.7rem; width: 100%; text-align: left;
+    padding: 0.7rem 0.55rem; border-radius: var(--radius); border: 1px solid transparent;
+  }
+  .srow:active { background: rgba(var(--glass-rgb), var(--glass-o-hover)); }
+  .srow .s-ic {
+    width: 2.15rem; height: 2.15rem; border-radius: var(--radius-sm); flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--glass-rgb), var(--glass-o)); border: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .srow .s-name { font-size: 0.92rem; font-weight: 540; }
+  .srow .s-meta { font-size: 0.74rem; color: var(--fg-2); }
+  .srow .s-check { width: 1.1rem; height: 1.1rem; color: rgb(var(--accent-rgb)); margin-left: auto; opacity: 0; flex: none; }
+  .srow.sel { background: rgba(var(--accent-rgb), 0.16); border-color: rgba(var(--accent-rgb), 0.3); }
+  .srow.sel .s-check { opacity: 1; }
+  .caps { display: flex; gap: 0.22rem; }
+  .cap { font-size: 0.58rem; font-weight: 600; padding: 0.06rem 0.32rem; border-radius: 0.25rem; background: rgba(var(--glass-rgb), var(--glass-o-thin)); color: var(--fg-2); border: 1px solid rgba(var(--border-rgb), var(--border-o)); }
+
+  .thr { display: flex; align-items: center; gap: 0.6rem; width: 100%; text-align: left; padding: 0.7rem 0.55rem; border-radius: var(--radius); }
+  .thr:active { background: rgba(var(--glass-rgb), var(--glass-o-hover)); }
+  .thr .th-title { font-size: 0.92rem; font-weight: 540; }
+  .thr .th-sub { font-size: 0.74rem; color: var(--fg-2); }
+  .thr .th-sync svg { width: 0.95rem; height: 0.95rem; color: var(--fg-3); }
+
+  .ctx-grid { display: grid; gap: 0.6rem; }
+  .ctx-tile {
+    border-radius: var(--radius); padding: 0.85rem 0.95rem;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .ctx-tile .ct-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 0.2rem 0; }
+  .ctx-tile .ct-row span:last-child { font-family: var(--font-mono); font-weight: 540; }
+  /* glass switch */
+  .switch {
+    width: 2.35rem; height: 1.4rem; border-radius: 99px; position: relative; flex: none;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), calc(var(--border-o) + 0.08));
+    transition: background 0.22s var(--ease);
+  }
+  .switch::after { content: ""; position: absolute; top: 0.15rem; left: 0.15rem; width: 1rem; height: 1rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.24s var(--spring); }
+  .switch.on { background: rgba(var(--accent-rgb), 0.9); border-color: rgba(var(--accent-rgb), 0.5); }
+  .switch.on::after { transform: translateX(0.95rem); }
+
+  .caption { text-align: center; color: var(--fg-2); font-size: 0.85rem; max-width: 320px; }
+  .caption b { color: var(--fg); }
+</style>
+</head>
+<body>
+
+<div class="phone" role="application" aria-label="Atomic Chat for iOS">
+  <div class="screen-bg" aria-hidden="true"></div>
+  <div class="island"></div>
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <span class="sb-r" aria-hidden="true">
+      <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="5" y="4" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="11" rx="1"/></svg>
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.2c2 0 3.8.8 5.1 2L14.5 2.8A9.4 9.4 0 0 0 8 0a9.4 9.4 0 0 0-6.5 2.8L3 4.2A7.3 7.3 0 0 1 8 2.2Zm0 3.5c1 0 2 .4 2.7 1.1l1.4-1.4A6 6 0 0 0 8 3.6a6 6 0 0 0-4.1 1.8l1.4 1.4A3.8 3.8 0 0 1 8 5.7Zm0 3.4 2-2a2.8 2.8 0 0 0-4 0l2 2Z"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="1" y="1.5" width="21" height="9" rx="2.6" stroke="currentColor" opacity="0.4"/><rect x="3" y="3.5" width="15" height="5" rx="1.4" fill="currentColor"/><path d="M23.5 4.5v3a2 2 0 0 0 0-3Z" fill="currentColor" opacity="0.5"/></svg>
+    </span>
+  </div>
+
+  <div class="screen">
+    <!-- nav bar -->
+    <div class="navbar">
+      <button class="nav-ic" onclick="openSheet('threadsSheet')" aria-label="Threads">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      </button>
+      <div class="nav-model">
+        <button class="nm-pill" onclick="openSheet('modelSheet')" aria-label="Switch model">
+          <span id="mIcon">☁️</span><span id="mName">Claude Sonnet 4.6</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <span class="nm-sub"><span class="dot dot-live"></span> Live · synced</span>
+      </div>
+      <button class="nav-ic" onclick="openSheet('ctxSheet')" aria-label="Thread context">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4m0-4h.01"/></svg>
+      </button>
+    </div>
+
+    <!-- messages -->
+    <div class="ios-msgs" id="iosMsgs">
+      <div class="pull-hint">↓ Pull to refresh sync</div>
+    </div>
+
+    <!-- composer -->
+    <div class="ios-composer">
+      <div class="ic-row">
+        <div class="ic-tools">
+          <button class="nav-ic" aria-label="Attach" title="Attach / camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+          </button>
+        </div>
+        <div class="ic-input">
+          <textarea id="iosComposer" rows="1" placeholder="Message…" aria-label="Message"></textarea>
+          <button class="ic-send" id="iosSend" onclick="iosSend()" disabled aria-label="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5m-7 7 7-7 7 7"/></svg>
+          </button>
+        </div>
+        <button class="ic-mic" id="iosMic" aria-label="Voice mode" title="Voice mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- scrim + sheets -->
+  <div class="scrim" id="scrim" onclick="closeSheets()"></div>
+
+  <!-- model sheet -->
+  <div class="sheet" id="modelSheet">
+    <div class="grabber"></div>
+    <div class="sheet-head"><h3>Choose model</h3>
+      <button class="nav-ic" onclick="closeSheets()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <div class="sheet-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="mSearch" placeholder="Search models" oninput="renderModels(this.value)" aria-label="Search models">
+      </div>
+      <div id="modelList"></div>
+    </div>
+  </div>
+
+  <!-- threads sheet -->
+  <div class="sheet" id="threadsSheet">
+    <div class="grabber"></div>
+    <div class="sheet-head"><h3>Chats</h3>
+      <button class="btn btn-primary btn-sm" onclick="iosNewChat()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14m-7-7h14"/></svg>New
+      </button>
+    </div>
+    <div class="sheet-body">
+      <div class="sheet-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" placeholder="Search chats" oninput="renderThreads(this.value)" aria-label="Search chats">
+      </div>
+      <div id="threadList"></div>
+    </div>
+  </div>
+
+  <!-- context sheet -->
+  <div class="sheet" id="ctxSheet">
+    <div class="grabber"></div>
+    <div class="sheet-head"><h3>Thread context</h3>
+      <button class="nav-ic" onclick="closeSheets()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="sheet-body">
+      <div class="ctx-grid">
+        <div class="ctx-tile">
+          <div class="eyebrow" style="margin-bottom:0.4rem">Token usage</div>
+          <div class="ct-row"><span class="muted">This thread</span><span>18,420</span></div>
+          <div class="ct-row"><span class="muted">Context</span><span>32K / 200K</span></div>
+          <div class="ct-row"><span class="muted">Est. cost</span><span>$0.061</span></div>
+        </div>
+        <div class="ctx-tile">
+          <div class="eyebrow" style="margin-bottom:0.4rem">Sync</div>
+          <div class="ct-row"><span class="muted">Status</span><span style="color:rgb(var(--success));display:flex;align-items:center;gap:0.3rem"><span class="dot dot-live"></span>Live</span></div>
+          <div class="ct-row"><span class="muted">Encryption</span><span>🔒 E2E</span></div>
+          <div class="ct-row"><span class="muted">Devices</span><span>iPhone · Mac · Web</span></div>
+        </div>
+        <div class="ctx-tile">
+          <div class="eyebrow" style="margin-bottom:0.5rem">Agent tools</div>
+          <label class="row gap-3" style="padding:0.4rem 0;font-size:0.88rem"><span>🔎</span><span class="grow">Web search</span><span class="switch on" onclick="this.classList.toggle('on')" role="switch" aria-checked="true" tabindex="0"></span></label>
+          <div class="divider"></div>
+          <label class="row gap-3" style="padding:0.4rem 0;font-size:0.88rem"><span>🐍</span><span class="grow">Code interpreter</span><span class="switch on" onclick="this.classList.toggle('on')" role="switch" aria-checked="true" tabindex="0"></span></label>
+          <div class="divider"></div>
+          <label class="row gap-3" style="padding:0.4rem 0;font-size:0.88rem"><span>📁</span><span class="grow">Filesystem</span><span class="switch" onclick="this.classList.toggle('on')" role="switch" aria-checked="false" tabindex="0"></span></label>
+        </div>
+        <div class="row gap-2" style="justify-content:center;padding-top:0.3rem">
+          <button class="btn btn-glass btn-sm" onclick="toggleTheme()">Glass: <span data-theme-label>Light</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-ind"></div>
+</div>
+
+<p class="caption">iOS single-panel chat — glass message bubbles refract the wallpaper, model / threads / context open as <b>glass bottom sheets</b>. Streaming, swipe-down to dismiss, safe-area aware.</p>
+
+<script src="js/theme.js"></script>
+<script>
+  var MODELS = [
+    { g:"On-device 🍎", id:"mlx-3b", ic:"🍎", name:"Llama 3.2 3B · MLX", meta:"On this iPhone · 1.9 GB", caps:["Fast"], local:true },
+    { g:"On-device 🍎", id:"mlx-1b", ic:"🍎", name:"Llama 3.2 1B · MLX", meta:"On this iPhone · 1.1 GB", caps:["Fastest"], local:true },
+    { g:"Cloud ☁️", id:"claude", ic:"☁️", name:"Claude Sonnet 4.6", meta:"Anthropic · streaming", caps:["Vision","Tools"], local:false },
+    { g:"Cloud ☁️", id:"gpt5", ic:"☁️", name:"GPT-5", meta:"OpenAI · streaming", caps:["Vision","Tools"], local:false },
+    { g:"Cloud ☁️", id:"groq", ic:"⚡", name:"Llama 3.3 70B", meta:"Groq · ~800 tok/s", caps:["Tools"], local:false }
+  ];
+  var current = MODELS[2];
+
+  var THREADS = [
+    { title:"Vector search over embeddings", sub:"pgvector + cosine…", sync:"live", active:true },
+    { title:"MLX vs llama.cpp speed", sub:"Tokens/sec on iPhone", sync:"cloud" },
+    { title:"Weekend recipe ideas", sub:"Local · not synced", sync:"local" },
+    { title:"Tailwind v4 migration", sub:"Syncing…", sync:"syncing" },
+    { title:"Rust ownership Q&A", sub:"Encrypted", sync:"cloud" }
+  ];
+
+  /* sheets */
+  function openSheet(id){
+    closeSheets(true);
+    document.getElementById("scrim").classList.add("open");
+    document.getElementById(id).classList.add("open");
+    if(id==="modelSheet") renderModels("");
+    if(id==="threadsSheet") renderThreads("");
+  }
+  function closeSheets(skipScrim){
+    document.querySelectorAll(".sheet").forEach(function(s){ s.classList.remove("open"); });
+    if(!skipScrim) document.getElementById("scrim").classList.remove("open");
+  }
+
+  /* models */
+  function renderModels(q){
+    q=(q||"").toLowerCase();
+    var list=document.getElementById("modelList"); list.innerHTML="";
+    var lastG="";
+    MODELS.forEach(function(m){
+      if(q && m.name.toLowerCase().indexOf(q)<0) return;
+      if(m.g!==lastG){ lastG=m.g; var g=document.createElement("div"); g.className="sgroup"; g.textContent=m.g; list.appendChild(g); }
+      var el=document.createElement("button");
+      el.className="srow"+(m.id===current.id?" sel":"");
+      el.innerHTML='<span class="s-ic">'+m.ic+'</span>'+
+        '<span class="grow"><span class="s-name">'+m.name+'</span><br><span class="s-meta">'+m.meta+'</span></span>'+
+        '<span class="caps">'+m.caps.map(function(c){return '<span class="cap">'+c+'</span>';}).join("")+'</span>'+
+        '<svg class="s-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>';
+      el.onclick=function(){
+        current=m;
+        document.getElementById("mName").textContent=m.name;
+        document.getElementById("mIcon").textContent=m.ic;
+        closeSheets();
+      };
+      list.appendChild(el);
+    });
+    if(!list.children.length) list.innerHTML='<p class="muted" style="padding:1rem;text-align:center">No models match.</p>';
+  }
+
+  /* threads */
+  function syncIcon(s){
+    if(s==="live")    return '<span class="dot dot-live"></span>';
+    if(s==="cloud")   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 18a4 4 0 0 1 0-8 6 6 0 0 1 11.5-1.5A3.5 3.5 0 0 1 18 18H7Z"/></svg>';
+    if(s==="syncing") return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1.4s linear infinite"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/></svg>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2"/></svg>';
+  }
+  function renderThreads(q){
+    q=(q||"").toLowerCase();
+    var list=document.getElementById("threadList"); list.innerHTML="";
+    THREADS.forEach(function(t){
+      if(q && t.title.toLowerCase().indexOf(q)<0) return;
+      var el=document.createElement("button");
+      el.className="thr";
+      el.innerHTML='<div class="grow"><div class="th-title">'+t.title+'</div><div class="th-sub">'+t.sub+'</div></div>'+
+        '<span class="th-sync">'+syncIcon(t.sync)+'</span>';
+      el.onclick=function(){ closeSheets(); };
+      list.appendChild(el);
+    });
+  }
+
+  /* messages */
+  var msgs=document.getElementById("iosMsgs");
+  function now(){ var d=new Date(); var h=d.getHours()%12||12; return h+":"+String(d.getMinutes()).padStart(2,"0")+" "+(d.getHours()<12?"AM":"PM"); }
+  function escapeHtml(s){ return s.replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c];}); }
+  function scrollDown(){ msgs.scrollTop=msgs.scrollHeight; }
+
+  function addUser(text){
+    var el=document.createElement("div"); el.className="imsg user";
+    el.innerHTML='<div class="bubble">'+escapeHtml(text)+'</div>'+
+      '<div class="stamp">'+now()+' <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>';
+    msgs.appendChild(el); scrollDown();
+  }
+  function addAI(){
+    var el=document.createElement("div"); el.className="imsg ai";
+    el.innerHTML='<div class="ai-name">'+current.ic+' '+current.name+'</div>'+
+      '<div class="bubble" data-stream><span class="typing"><i></i><i></i><i></i></span></div>';
+    msgs.appendChild(el); scrollDown();
+    return el.querySelector("[data-stream]");
+  }
+  function stream(target){
+    var reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+    var seq=[
+      {t:"tool"},
+      {t:"text",v:"With pgvector you store each chunk's embedding in a vector column and query by cosine distance. Here's the core query:"},
+      {t:"code"},
+      {t:"text",v:"An HNSW index keeps lookups fast even at millions of rows. Want a metadata filter added?"}
+    ];
+    target.innerHTML="";
+    var i=0;
+    function step(){
+      if(i>=seq.length){ done(target); return; }
+      var s=seq[i++];
+      if(s.t==="tool"){
+        target.insertAdjacentHTML("beforeend",
+          '<div class="tool"><div class="tool-head">🔎 <span class="t-name">web_search</span>'+
+          '<span class="badge" style="margin-left:auto;height:1.1rem"><span class="dot dot-live"></span>done</span></div>'+
+          '<div class="tool-body">"pgvector HNSW tuning" → 4 results</div></div>');
+        scrollDown(); setTimeout(step, reduce?0:380);
+      } else if(s.t==="code"){
+        target.insertAdjacentHTML("beforeend",
+          '<div class="code"><div class="code-head"><span class="code-lang">sql</span>'+
+          '<button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button></div>'+
+          '<pre><code><span class="tok-k">SELECT</span> id, content\n<span class="tok-k">FROM</span> documents\n'+
+          '<span class="tok-k">ORDER BY</span> embedding <span class="tok-k">&lt;=&gt;</span> <span class="tok-s">$1</span>\n<span class="tok-k">LIMIT</span> <span class="tok-s">5</span>;</code></pre></div>');
+        scrollDown(); setTimeout(step, reduce?0:380);
+      } else {
+        var p=document.createElement("p");
+        var cur=document.createElement("span"); cur.className="cursor";
+        p.appendChild(cur); target.appendChild(p);
+        var words=s.v.split(" "), wi=0;
+        var iv=setInterval(function(){
+          if(wi>=words.length){ clearInterval(iv); cur.remove(); scrollDown(); step(); return; }
+          cur.insertAdjacentText("beforebegin",(wi?" ":"")+words[wi++]); scrollDown();
+        }, reduce?0:42);
+        if(reduce){ clearInterval(iv); p.textContent=s.v; step(); }
+      }
+    }
+    step();
+  }
+  function done(target){
+    var a=document.createElement("div"); a.className="acts";
+    a.innerHTML=
+      '<button onclick="copyMsg(this)" aria-label="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>'+
+      '<button onclick="this.classList.toggle(\'on\')" aria-label="Good response"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11v9m4-9 1-7a2 2 0 0 1 4 .5L15 11h4a2 2 0 0 1 2 2.4l-1.4 6A2 2 0 0 1 17.6 21H7"/></svg></button>'+
+      '<button onclick="this.classList.toggle(\'on\')" aria-label="Bad response"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 13V4m-4 9-1 7a2 2 0 0 1-4-.5L9 13H5a2 2 0 0 1-2-2.4l1.4-6A2 2 0 0 1 6.4 3H17"/></svg></button>'+
+      '<button aria-label="Regenerate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/></svg></button>';
+    target.parentElement.appendChild(a);
+    scrollDown();
+  }
+  function copyCode(b){
+    navigator.clipboard && navigator.clipboard.writeText(b.closest(".code").querySelector("code").innerText);
+    var o=b.innerHTML; b.innerHTML='✓ Copied'; setTimeout(function(){ b.innerHTML=o; },1400);
+  }
+  function copyMsg(b){ b.classList.add("on"); setTimeout(function(){ b.classList.remove("on"); },1200); }
+
+  /* composer */
+  var ta=document.getElementById("iosComposer"), sb=document.getElementById("iosSend");
+  ta.addEventListener("input",function(){
+    this.style.height="auto"; this.style.height=Math.min(this.scrollHeight,96)+"px";
+    sb.disabled=!this.value.trim();
+  });
+  ta.addEventListener("keydown",function(e){ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); iosSend(); } });
+  var busy=false;
+  function iosSend(){
+    var v=ta.value.trim(); if(!v||busy) return;
+    busy=true; addUser(v); ta.value=""; ta.style.height="auto"; sb.disabled=true;
+    var t=addAI();
+    setTimeout(function(){ stream(t); busy=false; },600);
+  }
+  function iosNewChat(){
+    msgs.innerHTML='<div class="pull-hint">↓ Pull to refresh sync</div>';
+    closeSheets();
+  }
+
+  /* seed history */
+  (function(){
+    addUser("How do I do nearest-neighbour search over embeddings in Postgres?");
+    var t=addAI();
+    t.innerHTML=
+      '<div class="tool"><div class="tool-head">🔎 <span class="t-name">web_search</span><span class="badge" style="margin-left:auto;height:1.1rem"><span class="dot dot-live"></span>done</span></div><div class="tool-body">"pgvector HNSW tuning" → 4 results</div></div>'+
+      '<p>With pgvector you store each chunk\'s embedding in a vector column and query by cosine distance. Here\'s the core query:</p>'+
+      '<div class="code"><div class="code-head"><span class="code-lang">sql</span><button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button></div>'+
+      '<pre><code><span class="tok-k">SELECT</span> id, content\n<span class="tok-k">FROM</span> documents\n<span class="tok-k">ORDER BY</span> embedding <span class="tok-k">&lt;=&gt;</span> <span class="tok-s">$1</span>\n<span class="tok-k">LIMIT</span> <span class="tok-s">5</span>;</code></pre></div>'+
+      '<p>An HNSW index keeps lookups fast even at millions of rows. Want a metadata filter added?</p>';
+    done(t);
+  })();
+
+  /* pull to refresh */
+  var y0=null;
+  msgs.addEventListener("touchstart",function(e){ if(msgs.scrollTop<=0) y0=e.touches[0].clientY; });
+  msgs.addEventListener("touchend",function(e){
+    if(y0!==null && e.changedTouches[0].clientY-y0>70){
+      var h=msgs.querySelector(".pull-hint");
+      if(h){ h.textContent="✓ Synced just now"; setTimeout(function(){ h.textContent="↓ Pull to refresh sync"; },1800); }
+    }
+    y0=null;
+  });
+
+  function clock(){ var d=new Date(); document.getElementById("clock").textContent=d.getHours()+":"+String(d.getMinutes()).padStart(2,"0"); }
+  clock(); setInterval(clock,30000);
+</script>
+</body>
+</html>

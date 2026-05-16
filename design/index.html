@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atomic Chat — Liquid Glass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;540;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/atomic.css">
+<script>(function(){var d=document.documentElement,s=localStorage.getItem("atomic-skin");if(s!=="soft"&&s!=="glass")s="glass";d.setAttribute("data-skin",s);var ok=s==="soft"?["light","dark"]:["light","dark","clear","tinted"],t=localStorage.getItem("atomic-theme");if(ok.indexOf(t)<0)t=matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";d.setAttribute("data-theme",t);})();</script>
+<style>
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 1.5rem; }
+
+  /* floating glass header */
+  header { padding: 1.25rem 1.5rem 0; max-width: 1120px; margin: 0 auto; }
+  .topbar {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.55rem 0.7rem 0.55rem 1rem;
+    border-radius: 99px;
+  }
+  .logo { display: flex; align-items: center; gap: 0.6rem; font-weight: 600; font-size: 1rem; letter-spacing: -0.02em; }
+  .logo .mark { width: 2rem; height: 2rem; }
+  .logo .mark .orbit { transform-box: fill-box; transform-origin: center; }
+  .logo .mark .o1 { animation: spin 9s linear infinite; }
+  .logo .mark .o2 { animation: spin 9s linear infinite reverse; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* segmented variant switcher */
+  .seg {
+    margin-left: auto; display: flex; gap: 0.15rem; padding: 0.2rem;
+    border-radius: 99px;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .seg button {
+    display: flex; align-items: center; gap: 0.35rem;
+    padding: 0.34rem 0.7rem; border-radius: 99px;
+    font-size: 0.78rem; font-weight: 540; color: var(--fg-2);
+    transition: background 0.25s var(--ease), color 0.25s;
+  }
+  .seg button .sw { width: 0.7rem; height: 0.7rem; border-radius: 50%; border: 1px solid rgba(var(--border-rgb), 0.4); }
+  .seg button[aria-pressed="true"] {
+    color: var(--fg);
+    background: rgba(var(--glass-rgb), var(--glass-o-hover));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,var(--hi-o));
+  }
+  .sw-light  { background: linear-gradient(135deg,#fff,#dde6ff); }
+  .sw-dark   { background: linear-gradient(135deg,#2a2d4a,#0c0d18); }
+  .sw-clear  { background: linear-gradient(135deg,#2563a8,#1f8a8a); }
+  .sw-tinted { background: linear-gradient(135deg,#5a6cf0,#7b3fd0); }
+  .sw-glass  { background: linear-gradient(135deg,#dbe4ff,#c9b8ec); }
+  .sw-soft   { background: linear-gradient(135deg,#fff 0 50%,#1d1f24 50% 100%); }
+
+  /* skin + theme switchers share the header right edge */
+  .controls { margin-left: auto; display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
+  .controls .seg { margin-left: 0; }
+
+  /* ---- Soft Mono skin — launcher-local adjustments ---- */
+  [data-skin="soft"] .seg { background: var(--surface-2); }
+  [data-skin="soft"] .seg button[aria-pressed="true"] {
+    background: var(--background); box-shadow: 0 1px 2px rgba(0,0,0,0.10);
+  }
+  [data-skin="soft"] .seg [data-theme-pick="clear"],
+  [data-skin="soft"] .seg [data-theme-pick="tinted"] { display: none; }
+  [data-skin="soft"] .gpanel { background: var(--background); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  [data-skin="soft"] .pv-side i,
+  [data-skin="soft"] .pv-bub.a,
+  [data-skin="soft"] .pv-pill { background: var(--surface-2) !important; }
+  [data-skin="soft"] .pv-side i.a,
+  [data-skin="soft"] .pv-bub.u { background: rgb(var(--accent-rgb)) !important; }
+  [data-skin="soft"] .pv-wg span { background: var(--background); }
+  [data-skin="soft"] .tier .chip { -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+  [data-skin="soft"] .tier .t-thin   { background: var(--surface); }
+  [data-skin="soft"] .tier .t-base   { background: var(--surface-2); }
+  [data-skin="soft"] .tier .t-strong { background: var(--background); }
+  [data-skin="soft"] .tier .t-accent { background: rgb(var(--accent-rgb)); }
+
+  /* hero */
+  .hero { padding: 3.25rem 0 2.25rem; }
+  .hero .kicker {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    padding: 0.32rem 0.8rem; border-radius: 99px; margin-bottom: 1.1rem;
+    font-size: 0.74rem; font-weight: 560; color: var(--fg-2);
+  }
+  .hero h1 {
+    font-size: clamp(2.1rem, 5.4vw, 3.1rem); letter-spacing: -0.035em;
+    line-height: 1.06; max-width: 17ch; margin-bottom: 0.7rem;
+  }
+  .hero p { color: var(--fg-2); font-size: 1.06rem; max-width: 54ch; }
+
+  .section-label {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--fg-3); margin: 2.6rem 0 0.95rem; padding-left: 0.15rem;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  @media (max-width: 880px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    display: flex; flex-direction: column; border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: transform 0.28s var(--spring), box-shadow 0.28s var(--ease), border-color 0.28s;
+  }
+  .card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(var(--border-rgb), calc(var(--border-o) + 0.14));
+    box-shadow: inset 0 1px 0 0 rgba(255,255,255,var(--hi-o)), 0 22px 50px -16px rgba(0,0,0,calc(var(--shadow-o) + 0.14));
+  }
+
+  /* mini glass preview */
+  .preview { height: 156px; position: relative; overflow: hidden; }
+  .pv-tint { position: absolute; inset: 0; background: var(--backdrop); opacity: 0.9; }
+  .pv-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .gpanel {
+    background: rgba(var(--glass-rgb), var(--glass-o));
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    border: 1px solid rgba(var(--border-rgb), calc(var(--border-o) + 0.06));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,var(--hi-o));
+  }
+  .pv-win { width: 88%; height: 78%; border-radius: 10px; overflow: hidden; display: flex; }
+  .pv-side { width: 26%; border-right: 1px solid rgba(var(--border-rgb),var(--border-o)); padding: 7px; display: flex; flex-direction: column; gap: 5px; }
+  .pv-side i { height: 8px; border-radius: 3px; background: rgba(var(--glass-rgb), var(--glass-o-strong)); }
+  .pv-side i.a { background: rgba(var(--accent-rgb), 0.85); width: 70%; }
+  .pv-body { flex: 1; padding: 9px; display: flex; flex-direction: column; gap: 6px; }
+  .pv-bub { height: 18px; border-radius: 8px; }
+  .pv-bub.u { align-self: flex-end; width: 56%; background: rgba(var(--accent-rgb), 0.8); }
+  .pv-bub.a { align-self: flex-start; width: 72%; background: rgba(var(--glass-rgb), var(--glass-o-strong)); }
+  .pv-pill { margin-top: auto; height: 20px; border-radius: 99px; background: rgba(var(--glass-rgb), var(--glass-o-strong)); }
+  /* phone preview */
+  .pv-phone { width: 96px; height: 80%; border-radius: 16px; padding: 9px 8px; display: flex; flex-direction: column; gap: 5px; }
+  .pv-phone .notch { width: 30px; height: 7px; border-radius: 99px; background: rgba(var(--border-rgb),0.5); margin: 0 auto 3px; }
+  /* widget preview */
+  .pv-wg { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; width: 78%; height: 78%; }
+  .pv-wg span { border-radius: 12px; background: rgba(var(--glass-rgb), var(--glass-o)); border: 1px solid rgba(var(--border-rgb),var(--border-o)); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); box-shadow: inset 0 1px 0 rgba(255,255,255,var(--hi-o)); }
+  .pv-wg span:last-child { grid-column: span 2; }
+
+  .card-body { padding: 1rem 1.1rem 1.15rem; display: flex; flex-direction: column; gap: 0.32rem; flex: 1;
+    border-top: 1px solid rgba(var(--border-rgb), var(--border-o)); }
+  .card-body .ct { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .card-body h3 { font-size: 1rem; font-weight: 600; }
+  .card-body p { font-size: 0.84rem; color: var(--fg-2); flex: 1; }
+  .card-body .open { font-size: 0.81rem; font-weight: 540; display: flex; align-items: center; gap: 0.3rem; margin-top: 0.4rem; color: rgb(var(--accent-rgb)); }
+  .card-body .open svg { width: 0.9rem; height: 0.9rem; }
+  .card:hover .open svg { transform: translateX(3px); }
+  .card-body .open svg { transition: transform 0.2s var(--ease); }
+
+  .tag {
+    font-size: 0.66rem; font-weight: 600; padding: 0.12rem 0.45rem; border-radius: 0.35rem;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin)); color: var(--fg-2);
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+
+  /* material reference */
+  .mat { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; }
+  @media (max-width: 720px) { .mat { grid-template-columns: 1fr; } }
+  .mat-card { border-radius: var(--radius-lg); padding: 1.3rem 1.4rem; }
+  .mat-card h4 { font-size: 0.86rem; margin-bottom: 0.9rem; }
+  .tiers { display: flex; gap: 0.6rem; }
+  .tier { flex: 1; text-align: center; }
+  .tier .chip {
+    height: 3.4rem; border-radius: var(--radius); margin-bottom: 0.45rem;
+    border: 1px solid rgba(var(--border-rgb), calc(var(--border-o) + 0.05));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,var(--hi-o));
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  }
+  .tier .t-thin   { background: rgba(var(--glass-rgb), var(--glass-o-thin)); }
+  .tier .t-base   { background: rgba(var(--glass-rgb), var(--glass-o)); }
+  .tier .t-strong { background: rgba(var(--glass-rgb), var(--glass-o-strong)); }
+  .tier .t-accent { background: rgba(var(--accent-rgb), 0.85); }
+  .tier span { font-family: var(--font-mono); font-size: 0.66rem; color: var(--fg-3); }
+  .type-row { display: flex; flex-direction: column; gap: 0.35rem; }
+  .type-row .t1 { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.03em; }
+  .type-row .t2 { font-size: 0.9rem; color: var(--fg-2); }
+  .type-row .t3 { font-family: var(--font-mono); font-size: 0.78rem; color: var(--fg-3); }
+
+  footer { padding: 2.5rem 0 3.5rem; color: var(--fg-3); font-size: 0.83rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topbar glass-thin glass-rounded">
+    <div class="logo">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="3.4" fill="rgb(var(--accent-rgb))"/>
+        <g fill="none" stroke="currentColor" stroke-width="1.5">
+          <ellipse class="orbit o1" cx="16" cy="16" rx="13" ry="5.4"/>
+          <ellipse class="orbit o1" cx="16" cy="16" rx="13" ry="5.4" transform="rotate(60 16 16)"/>
+          <ellipse class="orbit o2" cx="16" cy="16" rx="13" ry="5.4" transform="rotate(120 16 16)"/>
+        </g>
+      </svg>
+      Atomic Chat
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Skin">
+        <button data-skin-pick="glass" onclick="setSkin('glass')" aria-pressed="true"><span class="sw sw-glass"></span>Liquid&nbsp;Glass</button>
+        <button data-skin-pick="soft"  onclick="setSkin('soft')"  aria-pressed="false"><span class="sw sw-soft"></span>Soft&nbsp;Mono</button>
+      </div>
+      <div class="seg" role="group" aria-label="Theme variant">
+        <button data-theme-pick="light"  onclick="setTheme('light')"  aria-pressed="true"><span class="sw sw-light"></span>Light</button>
+        <button data-theme-pick="dark"   onclick="setTheme('dark')"   aria-pressed="false"><span class="sw sw-dark"></span>Dark</button>
+        <button data-theme-pick="clear"  onclick="setTheme('clear')"  aria-pressed="false"><span class="sw sw-clear"></span>Clear</button>
+        <button data-theme-pick="tinted" onclick="setTheme('tinted')" aria-pressed="false"><span class="sw sw-tinted"></span>Tinted</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <span class="kicker glass-thin"><span class="dot dot-live"></span> Liquid Glass · iOS 26 / macOS 16 language</span>
+    <h1>Atomic Chat, rendered in&nbsp;glass.</h1>
+    <p>A privacy-first AI chat app for macOS, iOS and Web. Two skins — <strong>Liquid Glass</strong> for translucent depth, <strong>Soft Mono</strong> for flat, monochrome calm. Switch the skin or variant up top and every screen below restyles with it.</p>
+  </section>
+
+  <div class="section-label">Marketing</div>
+  <div class="grid">
+    <a class="card glass" href="landing.html">
+      <div class="preview">
+        <div class="pv-tint"></div>
+        <div class="pv-stage">
+          <div class="gpanel pv-win" style="flex-direction:column;align-items:center;justify-content:center;gap:7px">
+            <div class="pv-bub a" style="width:60%;height:11px;background:rgba(var(--accent-rgb),0.85)"></div>
+            <div class="pv-bub a" style="width:78%;background:rgba(var(--glass-rgb),var(--glass-o-strong))"></div>
+            <div style="display:flex;gap:6px;margin-top:3px"><div class="pv-pill" style="width:42px;height:15px;margin:0;background:rgba(var(--accent-rgb),0.8)"></div><div class="pv-pill" style="width:42px;height:15px;margin:0"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Landing page</h3></div>
+        <p>Responsive marketing site — glass hero over a refracted backdrop, feature grid, waitlist CTA.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-label">Onboarding &amp; sign-in</div>
+  <div class="grid">
+    <a class="card glass" href="onboarding.html">
+      <div class="preview">
+        <div class="pv-tint"></div>
+        <div class="pv-stage">
+          <div class="gpanel pv-win">
+            <div class="pv-side"><i class="a"></i><i></i><i></i><i></i></div>
+            <div class="pv-body" style="justify-content:center;align-items:center">
+              <div class="pv-bub a" style="width:54%;height:11px;background:rgba(var(--accent-rgb),0.85)"></div>
+              <div class="pv-bub a" style="width:74%"></div>
+              <div class="pv-pill" style="width:64%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Onboarding</h3><span class="tag">macOS</span></div>
+        <p>5-step first-launch wizard — local/cloud mode, OAuth + magic-link sign-in, model download.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+    <a class="card glass" href="onboarding-ios.html">
+      <div class="preview">
+        <div class="pv-tint"></div>
+        <div class="pv-stage">
+          <div class="gpanel pv-phone">
+            <div class="notch"></div>
+            <div class="pv-bub a" style="width:62%;height:10px;background:rgba(var(--accent-rgb),0.85)"></div>
+            <div class="pv-bub a" style="width:88%;height:10px"></div>
+            <div class="pv-pill" style="margin-top:auto"></div>
+            <div class="pv-pill" style="margin-top:0"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Onboarding</h3><span class="tag">iOS</span></div>
+        <p>Swipeable iPhone onboarding — glass bottom-sheet account step, native pager, safe areas.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-label">Product — main chat</div>
+  <div class="grid">
+    <a class="card glass" href="desktop.html">
+      <div class="preview">
+        <div class="pv-tint"></div>
+        <div class="pv-stage">
+          <div class="gpanel pv-win">
+            <div class="pv-side"><i class="a"></i><i></i><i></i></div>
+            <div class="pv-body">
+              <div class="pv-bub u"></div>
+              <div class="pv-bub a"></div>
+              <div class="pv-bub a" style="width:60%"></div>
+              <div class="pv-pill"></div>
+            </div>
+            <div class="pv-side" style="border-right:0;border-left:1px solid rgba(var(--border-rgb),var(--border-o));width:22%"><i></i><i></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Main chat</h3><span class="tag">macOS · 3-panel</span></div>
+        <p>Floating glass toolbar, glass sidebar &amp; inspector over an edge-to-edge backdrop. Streaming, code blocks, tool calls.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+    <a class="card glass" href="mobile-ios.html">
+      <div class="preview">
+        <div class="pv-tint"></div>
+        <div class="pv-stage">
+          <div class="gpanel pv-phone">
+            <div class="notch"></div>
+            <div class="pv-bub a" style="width:78%;background:rgba(var(--glass-rgb),var(--glass-o-strong))"></div>
+            <div class="pv-bub u" style="width:56%"></div>
+            <div class="pv-bub a" style="width:70%;background:rgba(var(--glass-rgb),var(--glass-o-strong))"></div>
+            <div class="pv-pill" style="margin-top:auto"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Main chat</h3><span class="tag">iOS · single-panel</span></div>
+        <p>Glass message bubbles, glass nav, model &amp; context as pull-up glass sheets. Streaming + pull-to-refresh.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-label">Models &amp; settings</div>
+  <div class="grid">
+    <a class="card glass" href="provider-settings.html">
+      <div class="preview">
+        <div class="pv-tint"></div>
+        <div class="pv-stage">
+          <div class="gpanel pv-win">
+            <div class="pv-side"><i></i><i class="a"></i><i></i><i></i></div>
+            <div class="pv-body">
+              <div class="pv-bub a" style="width:100%;align-self:stretch;height:24px"></div>
+              <div class="pv-bub a" style="width:100%;align-self:stretch;height:24px"></div>
+              <div class="pv-pill" style="width:50%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Provider settings</h3><span class="tag">macOS</span></div>
+        <p>Encrypted API-key management — reveal, base URLs, live "test connection" status pills.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+    <a class="card glass" href="model-hub.html">
+      <div class="preview">
+        <div class="pv-tint"></div>
+        <div class="pv-stage">
+          <div class="pv-wg" style="grid-template-columns:1fr 1fr;width:80%;height:74%">
+            <span></span><span></span><span></span><span style="grid-column:auto"></span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Model Hub</h3><span class="tag">macOS</span></div>
+        <p>Browse, filter and download local &amp; cloud models — live download progress, storage meter.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+    <a class="card glass" href="widgets.html">
+      <div class="preview">
+        <div class="pv-tint"></div>
+        <div class="pv-stage"><div class="pv-wg"><span></span><span></span><span></span></div></div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>OS widgets</h3><span class="tag">iOS</span></div>
+        <p>Home-screen widgets, lock-screen glances, Live Activity and Dynamic Island streaming states.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-label">Glass material</div>
+  <div class="mat">
+    <div class="mat-card glass">
+      <h4>Opacity tiers — refract the live backdrop</h4>
+      <div class="tiers">
+        <div class="tier"><div class="chip t-thin"></div><span>glass-thin</span></div>
+        <div class="tier"><div class="chip t-base"></div><span>glass</span></div>
+        <div class="tier"><div class="chip t-strong"></div><span>glass-strong</span></div>
+        <div class="tier"><div class="chip t-accent"></div><span>accent</span></div>
+      </div>
+    </div>
+    <div class="mat-card glass">
+      <h4>Type &amp; geometry</h4>
+      <div class="type-row">
+        <span class="t1">Private AI. Your data.</span>
+        <span class="t2">Inter — UI &amp; body, 16px base</span>
+        <span class="t3">JetBrains Mono · radius 1rem · blur 10–60px</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="wrap">
+  Atomic Chat · prototype set — shared <span class="mono" style="font-size:0.78rem">css/atomic.css</span>, two skins (Liquid Glass · Soft Mono). <em>Private AI. Your data. Your models.</em>
+</footer>
+
+<script src="js/theme.js"></script>
+</body>
+</html>

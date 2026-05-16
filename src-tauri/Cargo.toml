@@ -46,6 +46,7 @@ mobile = [
     "tauri/test",
     "tauri/wry",
     "dep:sqlx",
+    "dep:tauri-plugin-mlx-ios",
 ]
 test-tauri = [
     "tauri/wry",
@@ -96,6 +97,7 @@ tauri-plugin-deep-link = { version = "2", optional = true }
 tauri-plugin-hardware = { path = "./plugins/tauri-plugin-hardware", optional = true }
 tauri-plugin-llamacpp = { path = "./plugins/tauri-plugin-llamacpp" }
 tauri-plugin-mlx = { path = "./plugins/tauri-plugin-mlx", optional = true }
+tauri-plugin-mlx-ios = { path = "./plugins/tauri-plugin-mlx-ios", optional = true }
 tauri-plugin-foundation-models = { path = "./plugins/tauri-plugin-foundation-models", optional = true }
 tauri-plugin-vector-db = { path = "./plugins/tauri-plugin-vector-db" }
 tauri-plugin-rag = { path = "./plugins/tauri-plugin-rag" }

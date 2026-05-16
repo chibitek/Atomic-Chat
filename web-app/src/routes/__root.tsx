@@ -31,6 +31,7 @@ import { ServiceHubProvider } from '@/providers/ServiceHubProvider'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { LeftSidebar } from '@/components/left-sidebar'
 import { WindowControls } from '@/components/WindowControls'
+import { GlassThemeProvider, DesktopLayout, MobileLayout } from '@/components/glass'
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -71,49 +72,24 @@ function useSetupCompleted(): boolean {
 
 const AppLayout = () => {
   const { showJanModelPrompt } = useJanModelPrompt()
-  const {
-    open: isLeftPanelOpen,
-    setLeftPanel,
-    width: sidebarWidth,
-    setLeftPanelWidth,
-  } = useLeftPanel()
-  // Feeds live server / model / RAM state into the macOS menu-bar tray.
-  // No-op outside macOS Tauri builds (see hook implementation).
-  useTrayStatusSync()
   const isSetupCompleted = useSetupCompleted()
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
   return (
-    <div className="bg-neutral-50 dark:bg-background size-full relative">
-      <SidebarProvider
-        open={isLeftPanelOpen}
-        onOpenChange={setLeftPanel}
-        defaultWidth={sidebarWidth}
-        onWidthChange={setLeftPanelWidth}
-      >
-        <AnalyticProvider />
-        <KeyboardShortcutsProvider />
-        {/* Fake absolute panel top to enable window drag */}
-        {IS_WINDOWS && <WindowControls />}
-        {!IS_LINUX && (
-          <div
-            className="fixed w-full h-12 z-20 top-0"
-            data-tauri-drag-region
-          />
-        )}
-        <DialogAppUpdater />
-        {isSetupCompleted && <BackendUpdater />}
-        <WhatsNewDialog />
-        <LeftSidebar />
-        <SidebarInset>
-          <div className="bg-neutral-50 dark:bg-background size-full">
-            <Outlet />
-          </div>
-        </SidebarInset>
-
-        {/* Попап согласия на аналитику отключён; настройки → Privacy по-прежнему доступны */}
-        {/* {productAnalyticPrompt && <PromptAnalytic />} */}
-        {showJanModelPrompt && <PromptJanModel />}
-      </SidebarProvider>
+    <div className="size-full relative">
+      {isMobile ? (
+        <MobileLayout>
+          <Outlet />
+        </MobileLayout>
+      ) : (
+        <DesktopLayout>
+          <Outlet />
+        </DesktopLayout>
+      )}
+      <DialogAppUpdater />
+      {isSetupCompleted && <BackendUpdater />}
+      <WhatsNewDialog />
+      {showJanModelPrompt && <PromptJanModel />}
     </div>
   )
 }
@@ -173,20 +149,22 @@ function RootLayout() {
   return (
     <Fragment>
       <ServiceHubProvider>
-        <ThemeProvider />
-        <InterfaceProvider />
-        <ToasterProvider />
-        <TranslationProvider>
-          <ExtensionProvider>
-            <DataProvider />
-            <GlobalEventHandler />
-            {IS_LOGS_ROUTE ? <LogsLayout /> : <AppLayout />}
-          </ExtensionProvider>
-          {/* <TanStackRouterDevtools position="bottom-right" /> */}
-          <ToolApproval />
-          <AttachmentIngestionDialog />
-          <OutOfContextPromiseModal />
-        </TranslationProvider>
+        <GlassThemeProvider>
+          <ThemeProvider />
+          <InterfaceProvider />
+          <ToasterProvider />
+          <TranslationProvider>
+            <ExtensionProvider>
+              <DataProvider />
+              <GlobalEventHandler />
+              {IS_LOGS_ROUTE ? <LogsLayout /> : <AppLayout />}
+            </ExtensionProvider>
+            {/* <TanStackRouterDevtools position="bottom-right" /> */}
+            <ToolApproval />
+            <AttachmentIngestionDialog />
+            <OutOfContextPromiseModal />
+          </TranslationProvider>
+        </GlassThemeProvider>
       </ServiceHubProvider>
     </Fragment>
   )

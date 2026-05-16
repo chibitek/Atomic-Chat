@@ -47,6 +47,41 @@ export const openAIProviderSettings = [
 ]
 
 /**
+ * Ollama provider settings — bundled baseline.
+ *
+ * Ollama exposes an OpenAI-compatible API at /v1.  The api_key field is
+ * optional (most local installs don’t require auth) but is kept so the
+ * same UI works for Ollama Cloud or reverse-proxied instances that do
+ * require a bearer token.
+ */
+export const ollamaProviderSettings = [
+  {
+    key: 'api-key',
+    title: 'API Key',
+    description:
+      'Optional authentication token. Required only if your Ollama server is behind a proxy or uses Ollama Cloud.',
+    controller_type: 'input',
+    controller_props: {
+      placeholder: 'Insert API Key (optional)',
+      value: '',
+      type: 'password',
+      input_actions: ['unobscure', 'copy'],
+    },
+  },
+  {
+    key: 'base-url',
+    title: 'Base URL',
+    description:
+      'Your Ollama server endpoint. Defaults to the local installation. See the [Ollama OpenAI compatibility docs](https://github.com/ollama/ollama/blob/main/docs/openai.md) for more information.',
+    controller_type: 'input',
+    controller_props: {
+      placeholder: 'http://localhost:11434/v1',
+      value: 'http://localhost:11434/v1',
+    },
+  },
+]
+
+/**
  * In-app baseline of providers that cannot (or should not) live in the remote
  * registry. The registry-store seeds itself from this list on first load.
  */
@@ -83,6 +118,14 @@ export const BASELINE_PROVIDERS: ProviderObject[] = [
         },
       },
     ],
+    models: [],
+  },
+  {
+    active: true,
+    api_key: '',
+    base_url: 'http://localhost:11434/v1',
+    provider: 'ollama',
+    settings: ollamaProviderSettings,
     models: [],
   },
 ]

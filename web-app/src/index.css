@@ -3,6 +3,7 @@
 @import 'katex/dist/katex.min.css';
 @import '@/styles/font.css';
 @import '@/styles/markdown.css';
+@import '@/styles/atomic.css';
 @source '../node_modules/streamdown/dist/**/*.js';
 
 @custom-variant dark (&:is(.dark *));

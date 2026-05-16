@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atomic Chat — Provider Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;540;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/atomic.css">
+<script>(function(){var t=localStorage.getItem("atomic-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.setAttribute("data-theme","dark");})();</script>
+<style>
+  body { overflow: hidden; }
+  .win { min-width: 1024px; }
+  .shell { display: flex; flex: 1; min-height: 0; }
+
+  /* settings nav */
+  .set-nav {
+    width: 240px; flex: none; background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; padding: 0.85rem;
+  }
+  .set-nav .back { display: flex; align-items: center; gap: 0.5rem; font-size: 0.86rem; color: var(--muted-foreground); padding: 0.5rem 0.55rem; border-radius: var(--radius-sm); margin-bottom: 0.6rem; }
+  .set-nav .back:hover { background: var(--accent); color: var(--foreground); }
+  .set-nav .back svg { width: 1rem; height: 1rem; }
+  .set-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted-foreground); padding: 0.6rem 0.55rem 0.35rem; }
+  .nav-item {
+    display: flex; align-items: center; gap: 0.6rem; width: 100%; text-align: left;
+    padding: 0.52rem 0.55rem; border-radius: var(--radius-sm); font-size: 0.88rem; margin-bottom: 0.05rem;
+    color: var(--muted-foreground); transition: background 0.12s, color 0.12s;
+  }
+  .nav-item svg { width: 1.05rem; height: 1.05rem; }
+  .nav-item:hover { background: var(--accent); color: var(--foreground); }
+  .nav-item.active { background: var(--accent); color: var(--foreground); font-weight: 540; }
+
+  .set-main { flex: 1; min-width: 0; overflow-y: auto; }
+  .set-inner { max-width: 720px; margin: 0 auto; padding: 2.5rem 2.5rem 4rem; }
+  .page-head { margin-bottom: 1.75rem; }
+  .page-head h1 { font-size: 1.45rem; margin-bottom: 0.3rem; }
+  .page-head p { color: var(--muted-foreground); font-size: 0.92rem; }
+
+  .enc-banner {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+  }
+  .enc-banner .lock { width: 2rem; height: 2rem; border-radius: var(--radius-sm); background: var(--surface-2); display: flex; align-items: center; justify-content: center; flex: none; }
+  .enc-banner .lock svg { width: 1.1rem; height: 1.1rem; }
+  .enc-banner .et { font-size: 0.86rem; font-weight: 540; }
+  .enc-banner .es { font-size: 0.78rem; color: var(--muted-foreground); }
+
+  .section-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); margin: 1.4rem 0 0.7rem; }
+
+  /* provider card */
+  .provider {
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--surface); margin-bottom: 0.75rem; overflow: hidden;
+  }
+  .pv-head { display: flex; align-items: center; gap: 0.8rem; padding: 0.9rem 1rem; }
+  .pv-logo { width: 2.4rem; height: 2.4rem; border-radius: var(--radius); background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex: none; }
+  .pv-name { font-size: 0.95rem; font-weight: 600; }
+  .pv-meta { font-size: 0.78rem; color: var(--muted-foreground); }
+  .pv-status { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; }
+  .conn-pill { display: flex; align-items: center; gap: 0.35rem; font-size: 0.74rem; font-weight: 540; padding: 0.18rem 0.55rem; border-radius: 99px; }
+  .conn-ok   { color: var(--success); background: oklch(0.62 0.13 152 / 0.12); }
+  .conn-off  { color: var(--muted-foreground); background: var(--surface-2); }
+  .conn-err  { color: var(--destructive); background: oklch(0.577 0.245 27 / 0.12); }
+  .chev-btn { transition: transform 0.2s var(--ease); }
+  .provider.open .chev-btn { transform: rotate(180deg); }
+
+  .pv-body { display: none; padding: 0 1rem 1rem; border-top: 1px solid var(--border); }
+  .provider.open .pv-body { display: block; animation: fade-up 0.22s ease-out; }
+  @keyframes fade-up { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  .pv-fields { display: grid; gap: 0.9rem; padding-top: 1rem; }
+
+  .key-input { display: flex; align-items: center; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--background); overflow: hidden; }
+  .key-input:focus-within { border-color: var(--ring); box-shadow: 0 0 0 3px oklch(0.708 0 0 / 0.14); }
+  .key-input .enc-tag {
+    display: flex; align-items: center; gap: 0.3rem; padding: 0 0.6rem; height: 2.5rem;
+    background: var(--surface-2); border-right: 1px solid var(--border);
+    font-size: 0.72rem; color: var(--muted-foreground); white-space: nowrap;
+  }
+  .key-input .enc-tag svg { width: 0.85rem; height: 0.85rem; }
+  .key-input input { flex: 1; border: none; background: none; outline: none; padding: 0 0.7rem; height: 2.5rem; font-family: var(--font-mono); font-size: 0.84rem; }
+  .key-input .icon-btn { width: 2.5rem; height: 2.5rem; border-radius: 0; }
+
+  .help { font-size: 0.76rem; color: var(--muted-foreground); }
+  .help a { text-decoration: underline; text-underline-offset: 2px; }
+
+  .pv-actions { display: flex; align-items: center; gap: 0.6rem; margin-top: 1rem; }
+  .test-result { font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; }
+  .test-result svg { width: 0.95rem; height: 0.95rem; }
+
+  .add-provider {
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    width: 100%; padding: 0.85rem; border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius-lg); color: var(--muted-foreground); font-size: 0.88rem; font-weight: 540;
+    transition: border-color 0.15s, color 0.15s, background 0.15s; margin-top: 0.5rem;
+  }
+  .add-provider:hover { border-color: var(--foreground); color: var(--foreground); background: var(--surface); }
+
+  .toast {
+    position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(150%);
+    background: var(--primary); color: var(--primary-foreground);
+    padding: 0.7rem 1.1rem; border-radius: var(--radius); font-size: 0.85rem; font-weight: 540;
+    box-shadow: var(--shadow-modal); display: flex; align-items: center; gap: 0.5rem;
+    transition: transform 0.3s var(--ease); z-index: 100;
+  }
+  .toast.show { transform: translateX(-50%); }
+  .toast svg { width: 1rem; height: 1rem; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar">
+    <div class="traffic"><span class="tc"></span><span class="tm"></span><span class="tz"></span></div>
+    <div class="titlebar-title">Atomic Chat — Settings</div>
+    <button class="icon-btn" style="-webkit-app-region:no-drag" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36 6.36-.7-.7M6.34 6.34l-.7-.7m12.72 0-.7.7M6.34 17.66l-.7.7"/><circle cx="12" cy="12" r="4"/></svg>
+    </button>
+  </div>
+
+  <div class="shell">
+    <!-- settings nav -->
+    <nav class="set-nav">
+      <a class="back" href="desktop.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m6 6-6-6 6-6"/></svg> Back to chat</a>
+      <div class="set-title">Settings</div>
+      <button class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4 12H2m20 0h-2"/></svg> Appearance</button>
+      <button class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 18a4 4 0 0 1 0-8 6 6 0 0 1 11.5-1.5A3.5 3.5 0 0 1 18 18H7Z"/></svg> Providers</button>
+      <a class="nav-item" href="model-hub.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 9 4.5-9 4.5-9-4.5L12 3Z"/><path d="m3 12 9 4.5L21 12"/></svg> Models</a>
+      <button class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg> Notifications</button>
+      <button class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg> Data &amp; Sync</button>
+      <button class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Encryption</button>
+      <button class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg> Account</button>
+      <div class="spacer"></div>
+      <button class="nav-item" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg> Theme: <span data-theme-label>Light</span></button>
+    </nav>
+
+    <!-- main -->
+    <div class="set-main">
+      <div class="set-inner">
+        <div class="page-head">
+          <h1>AI Providers</h1>
+          <p>Connect cloud and local providers. Keys never leave this device unencrypted.</p>
+        </div>
+
+        <div class="enc-banner">
+          <div class="lock">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          </div>
+          <div class="grow">
+            <div class="et">API keys are end-to-end encrypted</div>
+            <div class="es">Encrypted at rest with your device key (AES-256) before sync. Atomic's servers never see plaintext.</div>
+          </div>
+          <span class="badge"><span class="dot" style="background:var(--success)"></span> Verified</span>
+        </div>
+
+        <div class="section-label">Connected · 2</div>
+
+        <!-- OpenAI -->
+        <div class="provider open" id="pv-openai">
+          <div class="pv-head" onclick="toggleProvider('pv-openai')">
+            <div class="pv-logo">⬡</div>
+            <div class="grow">
+              <div class="pv-name">OpenAI</div>
+              <div class="pv-meta">GPT-5, GPT-4o, o-series · 6 models available</div>
+            </div>
+            <div class="pv-status">
+              <span class="conn-pill conn-ok"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> Connected</span>
+              <button class="icon-btn chev-btn" aria-label="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+            </div>
+          </div>
+          <div class="pv-body">
+            <div class="pv-fields">
+              <div class="field">
+                <label class="label">API key</label>
+                <div class="key-input">
+                  <span class="enc-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Encrypted</span>
+                  <input type="password" value="sk-proj-9fA2xQ7bN4kLm8Wv" data-real="sk-proj-9fA2xQ7bN4kLm8Wv1cYpZ3rT" aria-label="OpenAI API key">
+                  <button class="icon-btn" onclick="toggleReveal(this)" aria-label="Reveal key">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+                <span class="help">Stored encrypted · last used 4 minutes ago</span>
+              </div>
+              <div class="field">
+                <label class="label">Base URL <span class="muted">(optional)</span></label>
+                <input class="input mono" value="https://api.openai.com/v1" aria-label="OpenAI base URL">
+                <span class="help">Override to route through a proxy or Azure deployment.</span>
+              </div>
+            </div>
+            <div class="pv-actions">
+              <button class="btn btn-secondary btn-sm" onclick="testConn(this)">Test connection</button>
+              <span class="test-result" data-result></span>
+              <div class="spacer"></div>
+              <button class="btn btn-ghost btn-sm" style="color:var(--destructive)">Disconnect</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anthropic -->
+        <div class="provider" id="pv-claude">
+          <div class="pv-head" onclick="toggleProvider('pv-claude')">
+            <div class="pv-logo">✳</div>
+            <div class="grow">
+              <div class="pv-name">Anthropic</div>
+              <div class="pv-meta">Claude Sonnet 4.6, Opus 4.7, Haiku · 4 models</div>
+            </div>
+            <div class="pv-status">
+              <span class="conn-pill conn-ok"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> Connected</span>
+              <button class="icon-btn chev-btn" aria-label="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+            </div>
+          </div>
+          <div class="pv-body">
+            <div class="pv-fields">
+              <div class="field">
+                <label class="label">API key</label>
+                <div class="key-input">
+                  <span class="enc-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Encrypted</span>
+                  <input type="password" value="sk-ant-api03-Hk2..." data-real="sk-ant-api03-Hk2Lp9Qm7Rt4Xw8Yz" aria-label="Anthropic API key">
+                  <button class="icon-btn" onclick="toggleReveal(this)" aria-label="Reveal key">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+                <span class="help">Stored encrypted · last used just now</span>
+              </div>
+            </div>
+            <div class="pv-actions">
+              <button class="btn btn-secondary btn-sm" onclick="testConn(this)">Test connection</button>
+              <span class="test-result" data-result></span>
+              <div class="spacer"></div>
+              <button class="btn btn-ghost btn-sm" style="color:var(--destructive)">Disconnect</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">Available</div>
+
+        <!-- Groq (not connected) -->
+        <div class="provider" id="pv-groq">
+          <div class="pv-head" onclick="toggleProvider('pv-groq')">
+            <div class="pv-logo">⚡</div>
+            <div class="grow">
+              <div class="pv-name">Groq</div>
+              <div class="pv-meta">Ultra-fast inference · Llama, Mixtral</div>
+            </div>
+            <div class="pv-status">
+              <span class="conn-pill conn-off">Not connected</span>
+              <button class="icon-btn chev-btn" aria-label="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+            </div>
+          </div>
+          <div class="pv-body">
+            <div class="pv-fields">
+              <div class="field">
+                <label class="label">API key</label>
+                <div class="key-input">
+                  <span class="enc-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Encrypted</span>
+                  <input type="password" placeholder="gsk_…" aria-label="Groq API key">
+                </div>
+                <span class="help">Get a free key at <a href="#">console.groq.com</a> — encrypted the moment you paste it.</span>
+              </div>
+            </div>
+            <div class="pv-actions">
+              <button class="btn btn-primary btn-sm" onclick="testConn(this)">Save &amp; test</button>
+              <span class="test-result" data-result></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ollama (local) -->
+        <div class="provider" id="pv-ollama">
+          <div class="pv-head" onclick="toggleProvider('pv-ollama')">
+            <div class="pv-logo">🦙</div>
+            <div class="grow">
+              <div class="pv-name">Ollama</div>
+              <div class="pv-meta">Local server · no key required</div>
+            </div>
+            <div class="pv-status">
+              <span class="conn-pill conn-off"><span class="dot dot-local"></span> Local</span>
+              <button class="icon-btn chev-btn" aria-label="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+            </div>
+          </div>
+          <div class="pv-body">
+            <div class="pv-fields">
+              <div class="field">
+                <label class="label">Server URL</label>
+                <input class="input mono" value="http://localhost:11434" aria-label="Ollama server URL">
+                <span class="help">Runs entirely on your machine — nothing is encrypted or synced because nothing leaves the device.</span>
+              </div>
+            </div>
+            <div class="pv-actions">
+              <button class="btn btn-secondary btn-sm" onclick="testConn(this)">Test connection</button>
+              <span class="test-result" data-result></span>
+            </div>
+          </div>
+        </div>
+
+        <button class="add-provider" onclick="showToast('Provider catalog — OpenRouter, Mistral, Together, Fireworks &amp; custom OpenAI-compatible endpoints')">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14m-7-7h14"/></svg>
+          Add another provider
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg><span id="toastMsg"></span></div>
+
+<script src="js/theme.js"></script>
+<script>
+  function toggleProvider(id){ document.getElementById(id).classList.toggle("open"); }
+
+  function toggleReveal(btn){
+    var input = btn.parentElement.querySelector("input");
+    if(input.type === "password"){
+      input.dataset.masked = input.value;
+      input.type = "text";
+      input.value = input.dataset.real || input.value;
+      btn.querySelector("svg").innerHTML = '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path d="m4 4 16 16"/>';
+    } else {
+      input.type = "password";
+      input.value = input.dataset.masked || input.value;
+      btn.querySelector("svg").innerHTML = '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>';
+    }
+  }
+
+  function testConn(btn){
+    var result = btn.parentElement.querySelector("[data-result]");
+    var orig = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-3-6.7"/></svg> Testing…';
+    result.innerHTML = "";
+    var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(function(){
+      btn.disabled = false;
+      btn.textContent = orig;
+      result.style.color = "var(--success)";
+      result.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> Reachable · 142 ms';
+      var prov = btn.closest(".provider");
+      var pill = prov.querySelector(".conn-pill");
+      if(pill.classList.contains("conn-off")){
+        pill.className = "conn-pill conn-ok";
+        pill.innerHTML = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> Connected';
+      }
+    }, reduce ? 0 : 1100);
+  }
+
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    document.getElementById("toastMsg").innerHTML = msg;
+    t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 3200);
+  }
+
+  var sty = document.createElement("style");
+  sty.textContent = "@keyframes spin{to{transform:rotate(360deg)}}";
+  document.head.appendChild(sty);
+</script>
+</body>
+</html>

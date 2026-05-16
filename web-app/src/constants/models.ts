@@ -639,4 +639,16 @@ export const providerModels = {
     supportsToolCalls: true,
     supportsN: true,
   },
+  // Ollama — any model pulled locally.  Capabilities depend on the model
+  // (e.g. llava for vision, llama3.2 for tool use).  We mark everything as
+  // supported because the user controls which model they load.
+  'ollama': {
+    models: true,
+    supportsCompletion: true,
+    supportsStreaming: true,
+    supportsJSON: true,
+    supportsImages: true,
+    supportsToolCalls: true,
+    supportsN: true,
+  },
 } as const

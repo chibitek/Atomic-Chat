@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atomic Chat — Model Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;540;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/atomic.css">
+<script>(function(){var t=localStorage.getItem("atomic-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.setAttribute("data-theme","dark");})();</script>
+<style>
+  body { overflow: hidden; }
+  .win { min-width: 1024px; }
+  .hub-main { flex: 1; min-height: 0; overflow-y: auto; }
+  .hub-inner { max-width: 1080px; margin: 0 auto; padding: 2.25rem 2.5rem 4rem; }
+
+  .hub-head { display: flex; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; }
+  .hub-head h1 { font-size: 1.55rem; margin-bottom: 0.25rem; }
+  .hub-head p { color: var(--muted-foreground); font-size: 0.92rem; }
+
+  .storage-card {
+    flex: none; width: 230px; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); padding: 0.75rem 0.9rem;
+  }
+  .storage-card .sc-top { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 0.45rem; }
+  .storage-card .sc-bar { height: 0.4rem; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .storage-card .sc-bar > i { display: block; height: 100%; background: var(--foreground); border-radius: 99px; }
+
+  .toolbar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+  .hub-search { flex: 1; display: flex; align-items: center; gap: 0.5rem; height: 2.6rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0 0.85rem; }
+  .hub-search input { flex: 1; border: none; background: none; outline: none; font-size: 0.9rem; }
+  .hub-search svg { width: 1.05rem; height: 1.05rem; color: var(--muted-foreground); }
+  .seg { display: flex; gap: 0.2rem; background: var(--surface-2); padding: 0.25rem; border-radius: var(--radius); }
+  .seg button { padding: 0.4rem 0.85rem; border-radius: var(--radius-sm); font-size: 0.84rem; font-weight: 540; color: var(--muted-foreground); }
+  .seg button.active { background: var(--background); color: var(--foreground); box-shadow: var(--shadow-subtle); }
+
+  .group-title { font-size: 0.95rem; font-weight: 600; margin: 1.75rem 0 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+  .group-title .count { font-size: 0.74rem; font-weight: 540; color: var(--muted-foreground); background: var(--surface-2); border-radius: 99px; padding: 0.1rem 0.5rem; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.85rem; }
+
+  .mcard {
+    border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface);
+    padding: 1.1rem; display: flex; flex-direction: column; gap: 0.7rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .mcard:hover { border-color: var(--border-strong); box-shadow: var(--shadow-subtle); }
+  .mc-top { display: flex; gap: 0.7rem; }
+  .mc-logo { width: 2.6rem; height: 2.6rem; border-radius: var(--radius); background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex: none; }
+  .mc-name { font-size: 0.96rem; font-weight: 600; }
+  .mc-pub { font-size: 0.76rem; color: var(--muted-foreground); }
+  .mc-runs { margin-left: auto; }
+  .runs-pill { display: flex; align-items: center; gap: 0.3rem; font-size: 0.68rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 99px; background: var(--surface-2); color: var(--muted-foreground); }
+  .mc-desc { font-size: 0.84rem; color: var(--muted-foreground); line-height: 1.5; }
+  .mc-specs { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .spec { font-size: 0.7rem; font-weight: 540; padding: 0.16rem 0.5rem; border-radius: 0.3rem; background: var(--surface-2); color: var(--muted-foreground); border: 1px solid var(--border); }
+  .mc-foot { display: flex; align-items: center; gap: 0.6rem; margin-top: auto; }
+  .mc-size { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted-foreground); }
+
+  .dl-state { flex: 1; }
+  .dl-state .dl-bar { height: 0.4rem; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .dl-state .dl-bar > i { display: block; height: 100%; width: 0; background: var(--foreground); border-radius: 99px; transition: width 0.3s linear; }
+  .dl-state .dl-txt { font-size: 0.72rem; color: var(--muted-foreground); margin-top: 0.3rem; display: flex; justify-content: space-between; }
+
+  .installed-tag { display: flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; font-weight: 540; color: var(--success); }
+  .installed-tag svg { width: 0.95rem; height: 0.95rem; }
+  .mc-menu { margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="titlebar">
+    <div class="traffic"><span class="tc"></span><span class="tm"></span><span class="tz"></span></div>
+    <a class="icon-btn" style="-webkit-app-region:no-drag" href="desktop.html" aria-label="Back to chat" title="Back to chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m6 6-6-6 6-6"/></svg>
+    </a>
+    <div class="titlebar-title">Atomic Chat — Model Hub</div>
+    <button class="icon-btn" style="-webkit-app-region:no-drag" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36 6.36-.7-.7M6.34 6.34l-.7-.7m12.72 0-.7.7M6.34 17.66l-.7.7"/><circle cx="12" cy="12" r="4"/></svg>
+    </button>
+  </div>
+
+  <div class="hub-main">
+    <div class="hub-inner">
+      <div class="hub-head">
+        <div class="grow">
+          <h1>Model Hub</h1>
+          <p>Download local models or connect cloud models. Everything you install runs offline.</p>
+        </div>
+        <div class="storage-card">
+          <div class="sc-top"><span class="muted">Local storage</span><span class="mono">14.8 / 64 GB</span></div>
+          <div class="sc-bar"><i style="width:23%"></i></div>
+          <div class="sc-top" style="margin:0.45rem 0 0"><span class="muted">3 models installed</span></div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="hub-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="hubSearch" placeholder="Search models — Llama, Qwen, Mistral, GPT…" oninput="render()" aria-label="Search models">
+        </div>
+        <div class="seg" id="filterSeg" role="tablist">
+          <button class="active" data-f="all" onclick="setFilter(this)">All</button>
+          <button data-f="local" onclick="setFilter(this)">🏠 Local</button>
+          <button data-f="ondevice" onclick="setFilter(this)">🍎 On-device</button>
+          <button data-f="cloud" onclick="setFilter(this)">☁️ Cloud</button>
+        </div>
+      </div>
+
+      <div id="hubBody"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/theme.js"></script>
+<script>
+  var MODELS = [
+    { id:"llama8b", cat:"local", ic:"🦙", name:"Llama 3.1 8B Instruct", pub:"Meta · llama.cpp",
+      desc:"Balanced general-purpose model. Strong tool use, runs comfortably on 16 GB machines.",
+      specs:["8B params","Q4_K_M","Tools","128K ctx"], size:"4.7 GB", state:"installed", runs:"on M3 Max" },
+    { id:"qwen14b", cat:"local", ic:"🌐", name:"Qwen 2.5 14B Instruct", pub:"Alibaba · llama.cpp",
+      desc:"Stronger reasoning and coding. Best local pick when you have the RAM to spare.",
+      specs:["14B params","Q4_K_M","Tools","128K ctx"], size:"8.2 GB", state:"installed", runs:"on M3 Max" },
+    { id:"mlx3b", cat:"ondevice", ic:"🍎", name:"Llama 3.2 3B · MLX", pub:"Meta · Apple MLX",
+      desc:"Optimised for Apple Silicon's unified memory. Fast, low power, great default.",
+      specs:["3B params","MLX 4-bit","Fast"], size:"1.9 GB", state:"installed", runs:"Apple Silicon" },
+    { id:"mlx1b", cat:"ondevice", ic:"🍎", name:"Llama 3.2 1B · MLX", pub:"Meta · Apple MLX",
+      desc:"Tiniest on-device model — instant responses, fits any iPhone or base Mac.",
+      specs:["1B params","MLX 4-bit","Fastest"], size:"1.1 GB", state:"idle", runs:"Apple Silicon" },
+    { id:"qwencoder", cat:"local", ic:"💻", name:"Qwen 2.5 Coder 7B", pub:"Alibaba · llama.cpp",
+      desc:"Code-specialised model. Excellent fill-in-the-middle and repo-aware completions.",
+      specs:["7B params","Q4_K_M","Code"], size:"4.4 GB", state:"idle", runs:"on M3 Max" },
+    { id:"mistral", cat:"local", ic:"🌬️", name:"Mistral Small 3", pub:"Mistral AI · llama.cpp",
+      desc:"24B-class quality with efficient inference. Multilingual and tool-capable.",
+      specs:["24B params","Q4_K_M","Tools"], size:"13.1 GB", state:"idle", runs:"on M3 Max" },
+    { id:"claude", cat:"cloud", ic:"☁️", name:"Claude Sonnet 4.6", pub:"Anthropic · cloud API",
+      desc:"Frontier reasoning, vision and long-context. Connected via your encrypted key.",
+      specs:["Vision","Tools","200K ctx","Streaming"], size:"API", state:"connected", runs:"cloud" },
+    { id:"gpt5", cat:"cloud", ic:"☁️", name:"GPT-5", pub:"OpenAI · cloud API",
+      desc:"OpenAI's flagship. Multimodal input, fast streaming, broad tool support.",
+      specs:["Vision","Tools","Streaming"], size:"API", state:"connected", runs:"cloud" },
+    { id:"groq70b", cat:"cloud", ic:"⚡", name:"Llama 3.3 70B", pub:"Groq · cloud API",
+      desc:"Open-weight model at ~800 tokens/sec on Groq's LPU hardware. Add a key to enable.",
+      specs:["Tools","Ultra-fast"], size:"API", state:"connect", runs:"cloud" }
+  ];
+  var filter = "all";
+
+  function setFilter(btn){
+    document.querySelectorAll("#filterSeg button").forEach(function(b){ b.classList.remove("active"); });
+    btn.classList.add("active");
+    filter = btn.dataset.f;
+    render();
+  }
+
+  function card(m){
+    var foot;
+    if(m.state === "installed"){
+      foot = '<span class="installed-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Installed</span>'+
+        '<span class="mc-size">'+m.size+'</span>'+
+        '<button class="icon-btn mc-menu" aria-label="Manage model" onclick="manage(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>';
+    } else if(m.state === "connected"){
+      foot = '<span class="installed-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Connected</span>'+
+        '<span class="mc-size">'+m.size+'</span>'+
+        '<a class="btn btn-secondary btn-sm mc-menu" href="provider-settings.html">Manage key</a>';
+    } else if(m.state === "connect"){
+      foot = '<span class="mc-size">'+m.size+'</span>'+
+        '<a class="btn btn-primary btn-sm" style="margin-left:auto" href="provider-settings.html">Add API key</a>';
+    } else {
+      foot = '<span class="mc-size">'+m.size+'</span>'+
+        '<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="download(this,\''+m.id+'\')">'+
+        '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></svg>Download</button>';
+    }
+    return '<div class="mcard" data-id="'+m.id+'">'+
+      '<div class="mc-top">'+
+        '<div class="mc-logo">'+m.ic+'</div>'+
+        '<div style="min-width:0"><div class="mc-name">'+m.name+'</div><div class="mc-pub">'+m.pub+'</div></div>'+
+        '<div class="mc-runs"><span class="runs-pill">'+(m.cat==="cloud"?'☁️':'<span class="dot dot-local"></span>')+' '+m.runs+'</span></div>'+
+      '</div>'+
+      '<p class="mc-desc">'+m.desc+'</p>'+
+      '<div class="mc-specs">'+m.specs.map(function(s){return '<span class="spec">'+s+'</span>';}).join("")+'</div>'+
+      '<div class="mc-foot" data-foot>'+foot+'</div>'+
+    '</div>';
+  }
+
+  function render(){
+    var q = document.getElementById("hubSearch").value.toLowerCase();
+    var body = document.getElementById("hubBody");
+    var rows = MODELS.filter(function(m){
+      if(filter==="all"){} else if(m.cat!==filter) return false;
+      return !q || m.name.toLowerCase().indexOf(q)>-1 || m.pub.toLowerCase().indexOf(q)>-1;
+    });
+    var installed = rows.filter(function(m){ return m.state==="installed"; });
+    var connected = rows.filter(function(m){ return m.state==="connected"; });
+    var discover = rows.filter(function(m){ return m.state==="idle"||m.state==="connect"; });
+    var html = "";
+    function block(title, arr){
+      if(!arr.length) return "";
+      return '<div class="group-title">'+title+'<span class="count">'+arr.length+'</span></div>'+
+        '<div class="grid">'+arr.map(card).join("")+'</div>';
+    }
+    html += block("Installed locally", installed);
+    html += block("Connected providers", connected);
+    html += block("Discover", discover);
+    if(!rows.length) html = '<p class="muted" style="text-align:center;padding:3rem">No models match your search.</p>';
+    body.innerHTML = html;
+  }
+
+  function download(btn, id){
+    var foot = btn.closest("[data-foot]");
+    var m = MODELS.filter(function(x){ return x.id===id; })[0];
+    foot.innerHTML = '<div class="dl-state"><div class="dl-bar"><i></i></div>'+
+      '<div class="dl-txt"><span data-lbl>Starting…</span><span data-pct>0%</span></div></div>'+
+      '<button class="icon-btn" aria-label="Cancel download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>';
+    var bar = foot.querySelector("i"), lbl = foot.querySelector("[data-lbl]"), pct = foot.querySelector("[data-pct]");
+    var p = 0;
+    var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    lbl.textContent = "Downloading…";
+    var iv = setInterval(function(){
+      p += reduce ? 100 : (3 + Math.random()*8);
+      if(p >= 100){
+        p = 100; clearInterval(iv);
+        m.state = "installed";
+        foot.innerHTML = '<span class="installed-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Installed</span>'+
+          '<span class="mc-size">'+m.size+'</span>'+
+          '<button class="icon-btn mc-menu" aria-label="Manage model" onclick="manage(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>';
+        return;
+      }
+      bar.style.width = p + "%";
+      pct.textContent = Math.round(p) + "%";
+      lbl.textContent = "Downloading · " + (p<40?"resolving layers":p<80?"writing weights":"verifying");
+    }, reduce ? 0 : 240);
+  }
+
+  function manage(btn){
+    var card = btn.closest(".mcard");
+    var open = card.dataset.menu === "1";
+    document.querySelectorAll(".mcard").forEach(function(c){ delete c.dataset.menu; });
+    if(open) return;
+    card.dataset.menu = "1";
+    // simple inline confirm row
+  }
+
+  render();
+</script>
+</body>
+</html>

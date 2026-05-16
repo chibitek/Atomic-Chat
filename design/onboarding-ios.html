@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atomic Chat — iOS Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;540;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/atomic.css">
+<script>(function(){var t=localStorage.getItem("atomic-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.setAttribute("data-theme","dark");})();</script>
+<style>
+  body { background: var(--surface-2); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2.5rem 1rem; gap: 2rem; flex-wrap: wrap; }
+
+  /* iPhone frame */
+  .phone {
+    width: 390px; height: 844px; flex: none; position: relative;
+    background: var(--background); border-radius: 56px;
+    box-shadow: 0 0 0 12px #0c0c0e, 0 0 0 14px #2a2a2e, var(--shadow-modal);
+    overflow: hidden;
+  }
+  .island {
+    position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+    width: 124px; height: 36px; background: #000; border-radius: 99px; z-index: 40;
+  }
+  .statusbar {
+    position: absolute; top: 0; left: 0; right: 0; height: 54px; z-index: 30;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 32px 0; font-size: 0.86rem; font-weight: 600;
+  }
+  .statusbar .sb-r { display: flex; gap: 6px; align-items: center; }
+  .home-ind {
+    position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%);
+    width: 140px; height: 5px; border-radius: 99px; background: var(--foreground); opacity: 0.85; z-index: 40;
+  }
+  .screen { position: absolute; inset: 0; padding-top: 54px; display: flex; flex-direction: column; }
+
+  /* onboarding slides */
+  .ob-track { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .slide { display: none; flex: 1; flex-direction: column; padding: 1.5rem 1.6rem 0; overflow-y: auto; animation: slide-in 0.32s var(--ease); }
+  .slide.show { display: flex; }
+  @keyframes slide-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+
+  .ob-illus {
+    height: 230px; flex: none; border-radius: var(--radius-xl);
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;
+    position: relative; overflow: hidden;
+  }
+  .ob-illus .mark { width: 5rem; height: 5rem; color: var(--foreground); }
+  .ob-illus .orbit { animation: spin 12s linear infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ob-illus .grid-bg {
+    position: absolute; inset: 0; opacity: 0.5;
+    background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .slide h1 { font-size: 1.55rem; margin-bottom: 0.45rem; }
+  .slide .lede { color: var(--muted-foreground); font-size: 0.95rem; margin-bottom: 1.25rem; }
+
+  .mchoice {
+    display: flex; gap: 0.85rem; align-items: flex-start; width: 100%; text-align: left;
+    padding: 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--surface); margin-bottom: 0.7rem; transition: border-color 0.15s;
+  }
+  .mchoice.sel { border-color: var(--foreground); box-shadow: 0 0 0 3px oklch(0.708 0 0 / 0.14); }
+  .mchoice .ic { width: 2.4rem; height: 2.4rem; flex: none; border-radius: var(--radius); background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
+  .mchoice .ic svg { width: 1.25rem; height: 1.25rem; }
+  .mchoice h3 { font-size: 0.98rem; margin-bottom: 0.15rem; }
+  .mchoice p { font-size: 0.82rem; color: var(--muted-foreground); }
+  .mchoice .chk { margin-left: auto; width: 1.3rem; height: 1.3rem; border-radius: 50%; border: 1.5px solid var(--border-strong); flex: none; display: flex; align-items: center; justify-content: center; }
+  .mchoice.sel .chk { background: var(--foreground); border-color: var(--foreground); }
+  .mchoice .chk svg { width: 0.8rem; height: 0.8rem; color: var(--background); opacity: 0; }
+  .mchoice.sel .chk svg { opacity: 1; }
+
+  .ios-field { margin-bottom: 0.8rem; }
+  .ios-field .label { display: block; margin-bottom: 0.35rem; font-size: 0.8rem; }
+  .ios-input {
+    width: 100%; height: 3rem; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 0 1rem; font-size: 1rem;
+  }
+  .ios-input:focus { outline: none; border-color: var(--ring); background: var(--background); }
+  .oauth-ios { display: flex; flex-direction: column; gap: 0.55rem; margin-bottom: 1rem; }
+
+  .mdl-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem; border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--surface); margin-bottom: 0.6rem; }
+  .mdl-row.sel { border-color: var(--foreground); }
+  .mdl-row .mn { font-size: 0.9rem; font-weight: 540; }
+  .mdl-row .mm { font-size: 0.78rem; color: var(--muted-foreground); }
+  .progress { height: 0.45rem; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .progress > i { display: block; height: 100%; width: 0; background: var(--foreground); transition: width 0.3s linear; }
+
+  .ready-emoji { width: 4rem; height: 4rem; border-radius: 50%; background: var(--success); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; }
+  .ready-emoji svg { width: 2rem; height: 2rem; color: #fff; }
+
+  /* footer */
+  .ob-foot { flex: none; padding: 1rem 1.6rem calc(1.6rem + var(--safe-bottom)); }
+  .pager { display: flex; justify-content: center; gap: 0.4rem; margin-bottom: 1rem; }
+  .pager i { width: 0.42rem; height: 0.42rem; border-radius: 99px; background: var(--border-strong); transition: width 0.2s; }
+  .pager i.on { width: 1.3rem; background: var(--foreground); }
+  .btn-ios { width: 100%; height: 3.1rem; border-radius: var(--radius); font-size: 1rem; font-weight: 560; }
+  .skip-ios { display: block; width: 100%; text-align: center; margin-top: 0.7rem; font-size: 0.86rem; color: var(--muted-foreground); }
+
+  .caption { text-align: center; color: var(--muted-foreground); font-size: 0.85rem; max-width: 320px; }
+  .caption b { color: var(--foreground); }
+</style>
+</head>
+<body>
+
+<div class="phone" role="application" aria-label="Atomic Chat iOS onboarding">
+  <div class="island"></div>
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <span class="sb-r" aria-hidden="true">
+      <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="5" y="4" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="11" rx="1"/></svg>
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.2c2 0 3.8.8 5.1 2L14.5 2.8A9.4 9.4 0 0 0 8 0a9.4 9.4 0 0 0-6.5 2.8L3 4.2A7.3 7.3 0 0 1 8 2.2Zm0 3.5c1 0 2 .4 2.7 1.1l1.4-1.4A6 6 0 0 0 8 3.6a6 6 0 0 0-4.1 1.8l1.4 1.4A3.8 3.8 0 0 1 8 5.7Zm0 3.4 2-2a2.8 2.8 0 0 0-4 0l2 2Z"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="1" y="1.5" width="21" height="9" rx="2.6" stroke="currentColor" opacity="0.4"/><rect x="3" y="3.5" width="15" height="5" rx="1.4" fill="currentColor"/><path d="M23.5 4.5v3a2 2 0 0 0 0-3Z" fill="currentColor" opacity="0.5"/></svg>
+    </span>
+  </div>
+
+  <div class="screen">
+    <div class="ob-track">
+      <!-- slide 0 -->
+      <div class="slide show" data-s="0">
+        <div class="ob-illus">
+          <div class="grid-bg"></div>
+          <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="16" r="3.2" fill="currentColor"/>
+            <g fill="none" stroke="currentColor" stroke-width="1.5">
+              <ellipse class="orbit" cx="16" cy="16" rx="13" ry="5.3"/>
+              <ellipse cx="16" cy="16" rx="13" ry="5.3" transform="rotate(60 16 16)"/>
+              <ellipse cx="16" cy="16" rx="13" ry="5.3" transform="rotate(120 16 16)"/>
+            </g>
+          </svg>
+        </div>
+        <h1>Private AI in your pocket</h1>
+        <p class="lede">Atomic Chat runs language models right on your iPhone — or connects to the cloud when you want more power. You choose, every time.</p>
+        <div class="row gap-2" style="flex-wrap:wrap">
+          <span class="badge"><span class="dot dot-local"></span> On-device</span>
+          <span class="badge">🔒 Encrypted</span>
+          <span class="badge"><span class="dot dot-live"></span> Live sync</span>
+        </div>
+      </div>
+
+      <!-- slide 1 — mode -->
+      <div class="slide" data-s="1">
+        <h1>Choose how it runs</h1>
+        <p class="lede">Pick one or both — switch any time later.</p>
+        <button class="mchoice sel" data-mode="local" onclick="tog(this)">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 19h2"/></svg></span>
+          <div><h3>On this iPhone</h3><p>MLX models run offline. Nothing leaves your device.</p></div>
+          <span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
+        </button>
+        <button class="mchoice" data-mode="cloud" onclick="tog(this)">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 18a4 4 0 0 1 0-8 6 6 0 0 1 11.5-1.5A3.5 3.5 0 0 1 18 18H7Z"/></svg></span>
+          <div><h3>Cloud providers</h3><p>Add keys for OpenAI, Claude, Groq & more.</p></div>
+          <span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
+        </button>
+      </div>
+
+      <!-- slide 2 — account -->
+      <div class="slide" data-s="2">
+        <h1>Sync your conversations</h1>
+        <p class="lede">End-to-end encrypted across iPhone, Mac and Web. Optional — skip to stay local-only.</p>
+        <div class="oauth-ios">
+          <button class="btn btn-secondary btn-ios" type="button" style="height:3rem">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.7 2.2-4 2.3-4.1-1.3-1.8-3.2-2.1-3.9-2.1-1.7-.2-3.2 1-4 1-.8 0-2.1-1-3.4-1-1.8 0-3.4 1-4.3 2.6-1.8 3.2-.5 8 1.3 10.6.9 1.3 1.9 2.7 3.3 2.7 1.3-.1 1.8-.9 3.4-.9 1.6 0 2 .9 3.4.8 1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.4-2.9 1.4-3-.1 0-2.7-1-2.4-4Zm-2.6-7.5c.7-.9 1.2-2.1 1-3.3-1 0-2.3.7-3 1.5-.7.8-1.3 2-1.1 3.2 1.1.1 2.3-.5 3.1-1.4Z"/></svg>
+            Continue with Apple
+          </button>
+          <button class="btn btn-secondary btn-ios" type="button" style="height:3rem">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1a6.2 6.2 0 0 1 0-12.4c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.1 2.6 14.8 1.6 12 1.6a10.4 10.4 0 1 0 0 20.8c6 0 10-4.2 10-10.1 0-.7-.1-1.2-.2-1.8H12Z"/></svg>
+            Continue with Google
+          </button>
+        </div>
+        <div class="row gap-2" style="color:var(--muted-foreground);font-size:0.78rem;margin-bottom:0.8rem">
+          <span style="flex:1;height:1px;background:var(--border)"></span> or email <span style="flex:1;height:1px;background:var(--border)"></span>
+        </div>
+        <div class="ios-field">
+          <label class="label" for="ios-email">Email</label>
+          <input class="ios-input" id="ios-email" type="email" inputmode="email" placeholder="you@example.com">
+        </div>
+        <button class="btn btn-primary btn-ios" type="button" onclick="next()" style="margin-top:0.3rem">Send magic link</button>
+      </div>
+
+      <!-- slide 3 — model -->
+      <div class="slide" data-s="3">
+        <h1>Pick a local model</h1>
+        <p class="lede">Optimised for Apple Silicon. Downloads once, runs offline forever.</p>
+        <button class="mdl-row sel" data-size="1.1 GB" onclick="pick(this)">
+          <span class="avatar avatar-sq">🍎</span>
+          <div class="grow"><div class="mn">Llama 3.2 · 1B · MLX</div><div class="mm">1.1 GB · fastest, fits any iPhone</div></div>
+          <span class="badge badge-cap">Best for mobile</span>
+        </button>
+        <button class="mdl-row" data-size="1.9 GB" onclick="pick(this)">
+          <span class="avatar avatar-sq">🍎</span>
+          <div class="grow"><div class="mn">Llama 3.2 · 3B · MLX</div><div class="mm">1.9 GB · stronger, needs A17+</div></div>
+        </button>
+        <div id="iosDl" style="display:none;margin-top:1rem">
+          <div class="progress"><i id="iosBar"></i></div>
+          <div class="row" style="justify-content:space-between;font-size:0.78rem;color:var(--muted-foreground);margin-top:0.5rem">
+            <span id="iosLbl">Downloading…</span><span id="iosPct">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- slide 4 — ready -->
+      <div class="slide" data-s="4">
+        <div style="margin:auto 0;text-align:center">
+          <div class="ready-emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+          <h1 style="margin-bottom:0.5rem">Ready to chat</h1>
+          <p class="caption" style="margin:0 auto">Your model is installed and your keys are <b>encrypted on-device</b>. Pull down any thread to refresh sync.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="ob-foot">
+      <div class="pager" id="pager"></div>
+      <button class="btn btn-primary btn-ios" id="cta" onclick="next()">Continue</button>
+      <a class="skip-ios" id="skip" href="mobile-ios.html">Skip for now</a>
+    </div>
+  </div>
+  <div class="home-ind"></div>
+</div>
+
+<p class="caption">iOS onboarding — swipe or tap <b>Continue</b>. Bottom-sheet account step, native safe areas, haptic-style step pager. Theme follows system; toggle on the desktop build.</p>
+
+<script src="js/theme.js"></script>
+<script>
+  var s = 0;
+  var st = { local: true, cloud: false };
+  function order(){ return st.local ? [0,1,2,3,4] : [0,1,2,4]; }
+
+  var pager = document.getElementById("pager");
+  function render(){
+    var o = order(), idx = o[s];
+    document.querySelectorAll(".slide").forEach(function(el){ el.classList.toggle("show", +el.dataset.s===idx); });
+    pager.innerHTML = o.map(function(_,i){ return '<i class="'+(i===s?'on':'')+'"></i>'; }).join("");
+    var cta = document.getElementById("cta");
+    cta.textContent = idx===0 ? "Get started" : (idx===3 ? "Finish" : (idx===4 ? "Open Atomic Chat" : "Continue"));
+    if (idx===4) cta.onclick = function(){ location.href="mobile-ios.html"; };
+    else cta.onclick = next;
+    document.getElementById("skip").style.display = idx===4 ? "none" : "";
+    if (idx===3) startDl();
+  }
+  function next(){ var o=order(); if(s<o.length-1){ s++; render(); } }
+  function tog(el){
+    var m = el.dataset.mode; st[m]=!st[m]; el.classList.toggle("sel", st[m]);
+    if(!st.local && !st.cloud){ st[m]=true; el.classList.add("sel"); }
+  }
+  function pick(el){
+    document.querySelectorAll(".mdl-row").forEach(function(r){ r.classList.remove("sel"); });
+    el.classList.add("sel"); dlGo=false; document.getElementById("iosDl").style.display="none"; startDl();
+  }
+  var dlGo=false;
+  function startDl(){
+    if(dlGo) return; dlGo=true;
+    var box=document.getElementById("iosDl"), bar=document.getElementById("iosBar");
+    var pct=document.getElementById("iosPct"), lbl=document.getElementById("iosLbl");
+    box.style.display="block"; var p=0;
+    var reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+    var t=setInterval(function(){
+      p += reduce?100:(5+Math.random()*10);
+      if(p>=100){ p=100; clearInterval(t); lbl.textContent="Installed · ready offline"; }
+      bar.style.width=p+"%"; pct.textContent=Math.round(p)+"%";
+    }, reduce?0:200);
+  }
+  // swipe
+  var x0=null;
+  var track=document.querySelector(".ob-track");
+  track.addEventListener("touchstart",function(e){ x0=e.touches[0].clientX; });
+  track.addEventListener("touchend",function(e){
+    if(x0===null) return;
+    var dx=e.changedTouches[0].clientX-x0;
+    if(dx<-45) next();
+    else if(dx>45 && s>0){ s--; render(); }
+    x0=null;
+  });
+  function clock(){ var d=new Date(); document.getElementById("clock").textContent=d.getHours()+":"+String(d.getMinutes()).padStart(2,"0"); }
+  clock(); setInterval(clock,30000);
+  render();
+</script>
+</body>
+</html>

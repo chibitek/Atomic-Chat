@@ -1,0 +1,27 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "default",
+  "description": "Default permissions for the MLX iOS plugin",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    {
+      "identifier": "mlx-ios:allow-load-model",
+      "allow": [{ "modelId": "*" }]
+    },
+    {
+      "identifier": "mlx-ios:allow-unload-model",
+      "allow": [{ "modelId": "*" }]
+    },
+    {
+      "identifier": "mlx-ios:allow-generate",
+      "allow": [{ "modelId": "*" }]
+    },
+    {
+      "identifier": "mlx-ios:allow-is-model-loaded",
+      "allow": [{ "modelId": "*" }]
+    },
+    "mlx-ios:allow-list-loaded-models",
+    "mlx-ios:allow-get-device-info"
+  ]
+}

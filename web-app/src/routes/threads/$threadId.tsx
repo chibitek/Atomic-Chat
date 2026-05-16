@@ -14,6 +14,7 @@ import { useAssistant } from '@/hooks/useAssistant'
 import { useTools } from '@/hooks/useTools'
 import { useAppState } from '@/hooks/useAppState'
 import { useInitialMessage } from '@/hooks/useInitialMessage'
+import { useComposerSend } from '@/stores/composer-send-store'
 import { useOptimisticUserMessage } from '@/hooks/useOptimisticUserMessage'
 import { buildOptimisticUserMessage } from '@/lib/optimisticUserMessage'
 import { useChat } from '@/hooks/use-chat'
@@ -715,6 +716,23 @@ function ThreadDetail() {
       }
     })()
   }, [threadId, processAndSendMessage])
+
+  // Consume pending sends from the glass composer (DesktopLayout / MobileLayout)
+  const composerSendRef = useRef(false)
+  useEffect(() => {
+    if (composerSendRef.current) return
+    composerSendRef.current = true
+
+    const interval = setInterval(() => {
+      const pending = useComposerSend.getState().consume(threadId)
+      if (pending) {
+        processAndSendMessage(pending.text, pending.files)
+      }
+    }, 100)
+
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId])
 
   // Handle submit from ChatInput
   const handleSubmit = useCallback(
