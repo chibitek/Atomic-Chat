@@ -103,7 +103,7 @@ export class SupabaseThreadsService implements ThreadsService {
       order: metadata.order as number | undefined,
       isFavorite: metadata.is_favorite as boolean | undefined,
       model: metadata.model as ThreadModel | undefined,
-      assistants: (metadata.assistants as ThreadAssistantInfo[] | undefined) ?? [],
+      assistants: (metadata.assistants as { id: string; name: string }[] | undefined) ?? [],
       metadata,
     } as Thread
   }

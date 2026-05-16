@@ -6,7 +6,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import type { AuthService, AuthSession, AuthUser } from './types'
+import type { AuthService, AuthSession } from './types'
 import type { Provider as SupabaseOAuthProvider } from '@supabase/supabase-js'
 
 export class SupabaseAuthService implements AuthService {
@@ -99,7 +99,7 @@ export class SupabaseAuthService implements AuthService {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
-    return { error: error?.message, url: data?.url }
+    return { error: error?.message ?? undefined, url: data?.url ?? undefined }
   }
 
   async signOut(): Promise<void> {

@@ -101,6 +101,9 @@ export class SupabaseMessagesService implements MessagesService {
       status: (row.status as ThreadMessage['status']) ?? 'ready',
       metadata: (row.metadata as Record<string, unknown>) ?? {},
       created: new Date(String(row.created_at)).getTime(),
-    } as ThreadMessage
+      object: 'thread.message',
+      created_at: new Date(String(row.created_at)).getTime(),
+      completed_at: new Date(String(row.created_at)).getTime(),
+    } as unknown as ThreadMessage
   }
 }

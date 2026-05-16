@@ -28,9 +28,6 @@ import { localStorageKey } from '@/constants/localStorage'
 import GlobalError from '@/containers/GlobalError'
 import { GlobalEventHandler } from '@/providers/GlobalEventHandler'
 import { ServiceHubProvider } from '@/providers/ServiceHubProvider'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { LeftSidebar } from '@/components/left-sidebar'
-import { WindowControls } from '@/components/WindowControls'
 import { GlassThemeProvider, DesktopLayout, MobileLayout } from '@/components/glass'
 
 export const Route = createRootRoute({

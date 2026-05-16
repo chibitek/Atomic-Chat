@@ -89,7 +89,7 @@ export class SupabaseAuthService {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     })
-    return { error: error?.message, url: data?.url }
+    return { error: error?.message ?? undefined, url: data?.url ?? undefined }
   }
 
   async signOut(): Promise<void> {

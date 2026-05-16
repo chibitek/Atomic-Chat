@@ -2,7 +2,7 @@
  * Default Auth Service (local-only, no authentication)
  */
 
-import type { AuthService, AuthSession, AuthUser } from './types'
+import type { AuthService, AuthSession } from './types'
 
 export class DefaultAuthService implements AuthService {
   private state: AuthSession = {
@@ -25,7 +25,7 @@ export class DefaultAuthService implements AuthService {
     }
   }
 
-  private notify(): void {
+  private _notify(): void {
     this.listeners.forEach((l) => l(this.state))
   }
 
