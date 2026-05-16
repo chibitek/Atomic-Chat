@@ -8,7 +8,7 @@ import {
 } from '@/components/glass'
 import { IconSend, IconPaperclip, IconMicrophone, IconTool, IconEye } from '@tabler/icons-react'
 
-export const Route = createFileRoute('/glass-demo')({
+export const Route = createFileRoute('/_layout/glass-demo' as any)({
   component: GlassDemo,
 })
 

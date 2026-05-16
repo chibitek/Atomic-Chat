@@ -12,7 +12,6 @@ import { useThreads } from '@/hooks/useThreads'
 import { useModelProvider } from '@/hooks/useModelProvider'
 import { useMessages } from '@/hooks/useMessages'
 import { useComposerSend } from '@/stores/composer-send-store'
-import { TEMPORARY_CHAT_ID } from '@/constants/chat'
 
 export function MobileLayout({ children }: { children?: React.ReactNode }) {
   const navigate = useNavigate()
@@ -43,7 +42,7 @@ export function MobileLayout({ children }: { children?: React.ReactNode }) {
     const model = selectedModel
       ? { id: selectedModel.id, provider: selectedProvider }
       : undefined
-    const thread = await createThread(model, 'New Chat')
+    const thread = await createThread(model as ThreadModel | undefined, 'New Chat')
     setCurrentThreadId(thread.id)
     navigate({ to: '/threads/$threadId', params: { threadId: thread.id } })
     setActiveSheet(null)

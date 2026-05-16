@@ -1,4 +1,3 @@
-import React from 'react'
 import { useGlassTheme, type Skin, type Theme } from './GlassThemeProvider'
 import { cn } from '@/lib/utils'
 

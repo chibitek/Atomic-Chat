@@ -7,18 +7,16 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useThreads } from '@/hooks/useThreads'
 import { useModelProvider } from '@/hooks/useModelProvider'
 import { useMessages } from '@/hooks/useMessages'
 import { useAppState } from '@/hooks/useAppState'
 import { useChatSessions } from '@/stores/chat-session-store'
 import { useComposerSend } from '@/stores/composer-send-store'
-import { TEMPORARY_CHAT_ID } from '@/constants/chat'
 
 export function DesktopLayout({ children }: { children?: React.ReactNode }) {
   const navigate = useNavigate()
-  const params = useParams({ strict: false })
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [modelOpen, setModelOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -50,7 +48,7 @@ export function DesktopLayout({ children }: { children?: React.ReactNode }) {
     const model = selectedModel
       ? { id: selectedModel.id, provider: selectedProvider }
       : undefined
-    const thread = await createThread(model, 'New Chat')
+    const thread = await createThread(model as ThreadModel | undefined, 'New Chat')
     setCurrentThreadId(thread.id)
     navigate({ to: '/threads/$threadId', params: { threadId: thread.id } })
   }

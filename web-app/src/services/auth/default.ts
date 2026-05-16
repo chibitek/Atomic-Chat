@@ -25,10 +25,6 @@ export class DefaultAuthService implements AuthService {
     }
   }
 
-  private _notify(): void {
-    this.listeners.forEach((l) => l(this.state))
-  }
-
   async signUp(): Promise<{ error?: string }> {
     return { error: 'Authentication not available in local mode' }
   }
