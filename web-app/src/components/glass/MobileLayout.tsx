@@ -389,34 +389,6 @@ export function MobileLayout({ children }: { children?: React.ReactNode }) {
           )}
         </div>
       </div>
-            <svg className="mobile-s-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-          </button>
-          <button className="mobile-srow">
-            <div className="mobile-s-ic">GPT</div>
-            <div className="flex-1 min-w-0">
-              <div className="mobile-s-name">GPT-5</div>
-              <div className="mobile-s-meta">OpenAI · Latest</div>
-            </div>
-            <div className="mobile-caps">
-              <span className="mobile-cap">☁️</span>
-            </div>
-          </button>
-          <div className="mobile-sgroup">Local</div>
-          <button className="mobile-srow">
-            <div className="mobile-s-ic">🍎</div>
-            <div className="flex-1 min-w-0">
-              <div className="mobile-s-name">MLX Llama 3</div>
-              <div className="mobile-s-meta">On-device · 8B</div>
-            </div>
-            <div className="mobile-caps">
-              <span className="mobile-cap">🏠</span>
-              <span className="mobile-cap">🍎</span>
-            </div>
-          </button>
-        </div>
-      </div>
 
       {/* Context Sheet */}
       <div className={cn('mobile-sheet', activeSheet === 'context' && 'open')}>
