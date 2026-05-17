@@ -1,12 +1,14 @@
 /**
  * Encrypted Provider Settings Service
  *
- * Stores provider API keys encrypted with the user's Supabase session token
- * as the password.  The plaintext key is never stored server-side.
+ * Stores provider API keys encrypted client-side before they reach Supabase.
+ * The encryption key is derived from the user's stable account id — NOT the
+ * rotating session token, which would make ciphertext undecryptable after the
+ * next token refresh (~1h). Note: the user id is not secret, so this is
+ * obfuscation-at-rest, not end-to-end confidentiality (see issue AS-2).
  */
 
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
-import { supabaseAuth } from '@/services/auth/supabase'
 import { encrypt, decrypt, serialisePayload, deserialisePayload } from '@/lib/crypto'
 
 export interface EncryptedProviderSetting {
@@ -17,6 +19,16 @@ export interface EncryptedProviderSetting {
 }
 
 export class EncryptedProviderSettingsService {
+  /**
+   * Stable per-user secret used to derive the encryption key. The user id is
+   * constant for the account's lifetime, so ciphertext stays decryptable
+   * across session refreshes (unlike the access token — see AS-1).
+   */
+  private async getEncryptionSecret(): Promise<string | null> {
+    const { data } = await supabase.auth.getUser()
+    return data.user?.id ?? null
+  }
+
   /**
    * Save a provider's API key encrypted.
    *
@@ -35,12 +47,12 @@ export class EncryptedProviderSettingsService {
       return { error: 'Supabase not configured' }
     }
 
-    const token = await supabaseAuth.getAccessToken()
-    if (!token) {
+    const secret = await this.getEncryptionSecret()
+    if (!secret) {
       return { error: 'Not authenticated' }
     }
 
-    const encrypted = await encrypt(apiKey, token)
+    const encrypted = await encrypt(apiKey, secret)
     const encrypted_api_key = serialisePayload(encrypted)
 
     const { error } = await supabase
@@ -80,8 +92,8 @@ export class EncryptedProviderSettingsService {
       return { apiKey: null, error: 'Supabase not configured' }
     }
 
-    const token = await supabaseAuth.getAccessToken()
-    if (!token) {
+    const secret = await this.getEncryptionSecret()
+    if (!secret) {
       return { apiKey: null, error: 'Not authenticated' }
     }
 
@@ -100,7 +112,7 @@ export class EncryptedProviderSettingsService {
       return { apiKey: null, error: 'Invalid encrypted payload' }
     }
 
-    const apiKey = await decrypt(payload, token)
+    const apiKey = await decrypt(payload, secret)
     return {
       apiKey,
       baseUrl: data.base_url ?? undefined,

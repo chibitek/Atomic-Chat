@@ -10,7 +10,8 @@ const ALGORITHM = 'AES-GCM'
 const IV_LENGTH = 12
 const SALT_LENGTH = 32
 const KEY_LENGTH = 32
-const ITERATIONS = 100_000
+// OWASP 2023 guidance for PBKDF2-SHA256 (AS-2).
+const ITERATIONS = 600_000
 const DIGEST = 'SHA-256'
 
 export interface EncryptedPayload {
