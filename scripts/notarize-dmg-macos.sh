@@ -34,9 +34,13 @@ if [[ -n "$APPLE_ID" && -n "$APPLE_PASSWORD" && -n "$APPLE_TEAM_ID" ]]; then
     --wait
   echo "Stapling..."
   xcrun stapler staple "$DMG"
-else
-  echo "Skip notarization: set APPLE_ID, APPLE_PASSWORD (app-specific), APPLE_TEAM_ID" >&2
-fi
 
-echo "Gatekeeper check (DMG):"
-spctl --assess --verbose --type open --context context:primary-signature "$DMG" && echo "spctl: OK"
+  echo "Gatekeeper check (DMG):"
+  spctl --assess --verbose --type open --context context:primary-signature "$DMG" && echo "spctl: OK"
+else
+  #? Локальная сборка без Apple credentials: нотаризация пропускается штатно.
+  #? spctl здесь намеренно НЕ запускаем — ненотаризованный DMG всегда «rejected»,
+  #? и под `set -e` это уронило бы весь `make build-mac` при исправном бандле.
+  echo "Skip notarization: set APPLE_ID, APPLE_PASSWORD (app-specific), APPLE_TEAM_ID" >&2
+  echo "DMG signed but NOT notarized — Gatekeeper will reject it on other Macs (expected for local builds)."
+fi
