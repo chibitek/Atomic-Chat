@@ -8,6 +8,8 @@ import {
 } from '@/components/glass'
 import { IconSend, IconPaperclip, IconMicrophone, IconTool, IconEye } from '@tabler/icons-react'
 
+// Demo route not present in the generated route tree; cast is intentional.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const Route = createFileRoute('/_layout/glass-demo' as any)({
   component: GlassDemo,
 })

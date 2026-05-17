@@ -201,7 +201,12 @@ export function MobileLayout({ children }: { children?: React.ReactNode }) {
                   <div className="mobile-bubble">
                     {typeof msg.content === 'string'
                       ? msg.content
-                      : msg.content?.map?.((c: any) => c.text?.value || '').join('') || ''}
+                      : msg.content
+                          ?.map?.(
+                            (c: { text?: { value?: string } }) =>
+                              c.text?.value || ''
+                          )
+                          .join('') || ''}
                   </div>
                   <div className="mobile-stamp">
                     {msg.role === 'user' && (
