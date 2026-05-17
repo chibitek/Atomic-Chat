@@ -21,10 +21,12 @@ function toEpochSeconds(value: unknown): number {
 export class SupabaseThreadsService implements ThreadsService {
   private local = new DefaultThreadsService()
   private hasSession = false
+  /** Resolves once the initial getSession() check has completed. */
+  private sessionReady: Promise<void> = Promise.resolve()
 
   constructor() {
     if (isSupabaseConfigured) {
-      supabase.auth.getSession().then(({ data }) => {
+      this.sessionReady = supabase.auth.getSession().then(({ data }) => {
         this.hasSession = !!data.session
       })
       supabase.auth.onAuthStateChange((_event, session) => {
@@ -33,13 +35,19 @@ export class SupabaseThreadsService implements ThreadsService {
     }
   }
 
-  /** Use Supabase only when configured AND a user is signed in. */
-  private get useCloud(): boolean {
-    return isSupabaseConfigured && this.hasSession
+  /**
+   * Use Supabase only when configured AND a user is signed in. Awaits the
+   * initial getSession() so a cold-start call cannot race ahead of it and
+   * wrongly route a signed-in user's request to local storage.
+   */
+  private async useCloud(): Promise<boolean> {
+    if (!isSupabaseConfigured) return false
+    await this.sessionReady
+    return this.hasSession
   }
 
   async fetchThreads(): Promise<Thread[]> {
-    if (!this.useCloud) return this.local.fetchThreads()
+    if (!(await this.useCloud())) return this.local.fetchThreads()
 
     const { data, error } = await supabase
       .from('threads')
@@ -56,7 +64,7 @@ export class SupabaseThreadsService implements ThreadsService {
 
   async createThread(thread: Thread): Promise<Thread> {
     if (thread.id === TEMPORARY_CHAT_ID) return thread
-    if (!this.useCloud) return this.local.createThread(thread)
+    if (!(await this.useCloud())) return this.local.createThread(thread)
 
     // user_id is auto-filled by the column DEFAULT auth.uid() (DL-1).
     const { data, error } = await supabase
@@ -86,7 +94,7 @@ export class SupabaseThreadsService implements ThreadsService {
 
   async updateThread(thread: Thread): Promise<void> {
     if (thread.id === TEMPORARY_CHAT_ID) return
-    if (!this.useCloud) return this.local.updateThread(thread)
+    if (!(await this.useCloud())) return this.local.updateThread(thread)
 
     const { error } = await supabase
       .from('threads')
@@ -110,7 +118,7 @@ export class SupabaseThreadsService implements ThreadsService {
 
   async deleteThread(threadId: string): Promise<void> {
     if (threadId === TEMPORARY_CHAT_ID) return
-    if (!this.useCloud) return this.local.deleteThread(threadId)
+    if (!(await this.useCloud())) return this.local.deleteThread(threadId)
 
     const { error } = await supabase
       .from('threads')

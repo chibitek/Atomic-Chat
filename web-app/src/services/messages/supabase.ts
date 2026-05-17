@@ -22,10 +22,12 @@ function toEpochMs(value: unknown): number {
 export class SupabaseMessagesService implements MessagesService {
   private local = new DefaultMessagesService()
   private hasSession = false
+  /** Resolves once the initial getSession() check has completed. */
+  private sessionReady: Promise<void> = Promise.resolve()
 
   constructor() {
     if (isSupabaseConfigured) {
-      supabase.auth.getSession().then(({ data }) => {
+      this.sessionReady = supabase.auth.getSession().then(({ data }) => {
         this.hasSession = !!data.session
       })
       supabase.auth.onAuthStateChange((_event, session) => {
@@ -34,14 +36,20 @@ export class SupabaseMessagesService implements MessagesService {
     }
   }
 
-  /** Use Supabase only when configured AND a user is signed in. */
-  private get useCloud(): boolean {
-    return isSupabaseConfigured && this.hasSession
+  /**
+   * Use Supabase only when configured AND a user is signed in. Awaits the
+   * initial getSession() so a cold-start call cannot race ahead of it and
+   * wrongly route a signed-in user's request to local storage.
+   */
+  private async useCloud(): Promise<boolean> {
+    if (!isSupabaseConfigured) return false
+    await this.sessionReady
+    return this.hasSession
   }
 
   async fetchMessages(threadId: string): Promise<ThreadMessage[]> {
     if (threadId === TEMPORARY_CHAT_ID) return []
-    if (!this.useCloud) return this.local.fetchMessages(threadId)
+    if (!(await this.useCloud())) return this.local.fetchMessages(threadId)
 
     const { data, error } = await supabase
       .from('messages')
@@ -59,7 +67,7 @@ export class SupabaseMessagesService implements MessagesService {
 
   async createMessage(message: ThreadMessage): Promise<ThreadMessage> {
     if (message.thread_id === TEMPORARY_CHAT_ID) return message
-    if (!this.useCloud) return this.local.createMessage(message)
+    if (!(await this.useCloud())) return this.local.createMessage(message)
 
     // user_id is auto-filled by the column DEFAULT auth.uid() (DL-2).
     // content is stored in a JSONB column (DL-3).
@@ -87,7 +95,7 @@ export class SupabaseMessagesService implements MessagesService {
 
   async modifyMessage(message: ThreadMessage): Promise<ThreadMessage> {
     if (message.thread_id === TEMPORARY_CHAT_ID) return message
-    if (!this.useCloud) return this.local.modifyMessage(message)
+    if (!(await this.useCloud())) return this.local.modifyMessage(message)
 
     const { data, error } = await supabase
       .from('messages')
@@ -110,7 +118,7 @@ export class SupabaseMessagesService implements MessagesService {
 
   async deleteMessage(threadId: string, messageId: string): Promise<void> {
     if (threadId === TEMPORARY_CHAT_ID) return
-    if (!this.useCloud) return this.local.deleteMessage(threadId, messageId)
+    if (!(await this.useCloud())) return this.local.deleteMessage(threadId, messageId)
 
     const { error } = await supabase
       .from('messages')

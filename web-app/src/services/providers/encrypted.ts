@@ -25,8 +25,10 @@ export class EncryptedProviderSettingsService {
    * across session refreshes (unlike the access token — see AS-1).
    */
   private async getEncryptionSecret(): Promise<string | null> {
-    const { data } = await supabase.auth.getUser()
-    return data.user?.id ?? null
+    // getSession() reads the cached JWT locally — no network round-trip,
+    // and works offline (unlike getUser()).
+    const { data } = await supabase.auth.getSession()
+    return data.session?.user?.id ?? null
   }
 
   /**
