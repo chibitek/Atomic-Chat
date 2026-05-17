@@ -1,18 +1,45 @@
 /**
  * Supabase Threads Service
  *
- * Persists threads to Supabase PostgreSQL with RLS.
- * Falls back silently when Supabase is not configured so the app still
- * works in local-only mode.
+ * Persists threads to Supabase PostgreSQL with RLS — but only when Supabase is
+ * configured AND a user is signed in. Without a session, RLS rejects every
+ * request, so each call delegates to the local DefaultThreadsService instead.
+ * That keeps threads persisted locally rather than silently dropped (DL-5).
  */
 
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import type { ThreadsService } from './types'
+import { DefaultThreadsService } from './default'
 import { TEMPORARY_CHAT_ID } from '@/constants/chat'
 
+/** Parse a timestamp column into epoch seconds, guarding null/invalid values (DL-7). */
+function toEpochSeconds(value: unknown): number {
+  const ms = new Date(String(value ?? '')).getTime()
+  return Number.isFinite(ms) ? ms / 1000 : Date.now() / 1000
+}
+
 export class SupabaseThreadsService implements ThreadsService {
+  private local = new DefaultThreadsService()
+  private hasSession = false
+
+  constructor() {
+    if (isSupabaseConfigured) {
+      supabase.auth.getSession().then(({ data }) => {
+        this.hasSession = !!data.session
+      })
+      supabase.auth.onAuthStateChange((_event, session) => {
+        this.hasSession = !!session
+      })
+    }
+  }
+
+  /** Use Supabase only when configured AND a user is signed in. */
+  private get useCloud(): boolean {
+    return isSupabaseConfigured && this.hasSession
+  }
+
   async fetchThreads(): Promise<Thread[]> {
-    if (!isSupabaseConfigured) return []
+    if (!this.useCloud) return this.local.fetchThreads()
 
     const { data, error } = await supabase
       .from('threads')
@@ -21,7 +48,7 @@ export class SupabaseThreadsService implements ThreadsService {
 
     if (error) {
       console.error('[SupabaseThreadsService] fetchThreads error:', error)
-      return []
+      return this.local.fetchThreads()
     }
 
     return (data ?? []).map((row) => this.rowToThread(row))
@@ -29,8 +56,9 @@ export class SupabaseThreadsService implements ThreadsService {
 
   async createThread(thread: Thread): Promise<Thread> {
     if (thread.id === TEMPORARY_CHAT_ID) return thread
-    if (!isSupabaseConfigured) return thread
+    if (!this.useCloud) return this.local.createThread(thread)
 
+    // user_id is auto-filled by the column DEFAULT auth.uid() (DL-1).
     const { data, error } = await supabase
       .from('threads')
       .insert({
@@ -50,7 +78,7 @@ export class SupabaseThreadsService implements ThreadsService {
 
     if (error) {
       console.error('[SupabaseThreadsService] createThread error:', error)
-      return thread
+      return this.local.createThread(thread)
     }
 
     return this.rowToThread(data)
@@ -58,7 +86,7 @@ export class SupabaseThreadsService implements ThreadsService {
 
   async updateThread(thread: Thread): Promise<void> {
     if (thread.id === TEMPORARY_CHAT_ID) return
-    if (!isSupabaseConfigured) return
+    if (!this.useCloud) return this.local.updateThread(thread)
 
     const { error } = await supabase
       .from('threads')
@@ -82,7 +110,7 @@ export class SupabaseThreadsService implements ThreadsService {
 
   async deleteThread(threadId: string): Promise<void> {
     if (threadId === TEMPORARY_CHAT_ID) return
-    if (!isSupabaseConfigured) return
+    if (!this.useCloud) return this.local.deleteThread(threadId)
 
     const { error } = await supabase
       .from('threads')
@@ -99,7 +127,7 @@ export class SupabaseThreadsService implements ThreadsService {
     return {
       id: String(row.id),
       title: String(row.title ?? 'Untitled'),
-      updated: new Date(String(row.updated_at)).getTime() / 1000,
+      updated: toEpochSeconds(row.updated_at),
       order: metadata.order as number | undefined,
       isFavorite: metadata.is_favorite as boolean | undefined,
       model: metadata.model as ThreadModel | undefined,

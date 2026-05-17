@@ -56,15 +56,13 @@ CREATE POLICY "Users can update own profile"
 
 -- ── Threads (chat conversations) ───────────────────────────────────────
 
+-- user_id defaults to auth.uid() so inserts auto-fill from the caller's JWT.
+-- Thread display fields (model, order, is_favorite, assistants) live in metadata.
 CREATE TABLE IF NOT EXISTS public.threads (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL DEFAULT 'New Chat',
-  model TEXT,
-  provider TEXT,
   metadata JSONB DEFAULT '{}',
-  is_favorite BOOLEAN DEFAULT FALSE,
-  order_index INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -81,12 +79,13 @@ CREATE POLICY "Users can CRUD own threads"
 
 -- ── Messages (chat messages within threads) ──────────────────────────────
 
+-- content is JSONB: ThreadMessage.content is a structured array of parts.
 CREATE TABLE IF NOT EXISTS public.messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   thread_id UUID NOT NULL REFERENCES public.threads(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
-  content TEXT NOT NULL,
+  user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system', 'tool')),
+  content JSONB NOT NULL,
   status TEXT DEFAULT 'ready' CHECK (status IN ('pending', 'ready', 'error')),
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -107,7 +106,7 @@ CREATE POLICY "Users can CRUD own messages"
 
 CREATE TABLE IF NOT EXISTS public.provider_settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
   provider TEXT NOT NULL,
   encrypted_api_key TEXT NOT NULL,
   base_url TEXT,

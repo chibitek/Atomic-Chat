@@ -30,13 +30,13 @@ async function testConnection() {
   try {
     // Test 1: Basic connectivity (get session)
     console.log('\n1️⃣ Testing auth connectivity...')
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    const { error: sessionError } = await supabase.auth.getSession()
     if (sessionError) throw sessionError
     console.log('   ✅ Auth endpoint reachable')
 
     // Test 2: Check if tables exist by querying threads
     console.log('\n2️⃣ Testing database tables...')
-    const { data: threads, error: threadsError } = await supabase
+    const { error: threadsError } = await supabase
       .from('threads')
       .select('count', { count: 'exact', head: true })
 

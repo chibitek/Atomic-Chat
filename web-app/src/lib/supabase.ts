@@ -19,9 +19,14 @@ const supabaseAnonKey =
 export const isSupabaseConfigured =
   supabaseUrl.length > 0 && supabaseAnonKey.length > 0
 
+//* createClient throws "supabaseUrl is required." on an empty URL. That throw
+//* happens at module load, aborts the whole import graph, and leaves the app
+//* stuck on the HTML loading spinner forever. When Supabase is not configured
+//* we pass harmless placeholders instead; isSupabaseConfigured stays false so
+//* every caller (and assertSupabase) no-ops and the app runs in local-only mode.
 export const supabase: SupabaseClient = createClient(
-  supabaseUrl,
-  supabaseAnonKey,
+  supabaseUrl || 'http://localhost',
+  supabaseAnonKey || 'public-anon-key',
   {
     auth: {
       autoRefreshToken: true,
