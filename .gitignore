@@ -10,6 +10,7 @@ package-lock.json
 
 # Build & dist
 dist/
+dist-js/
 dist-ssr
 dist-web
 build/
@@ -86,6 +87,7 @@ temp/
 
 # Project-specific
 pre-install
+data/
 .opencode
 OpenCode.md
 Claude.md
