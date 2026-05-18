@@ -125,7 +125,9 @@ export function DesktopLayout({ children }: { children?: React.ReactNode }) {
             <path d="M3 12h18M3 6h18M3 18h18" />
           </svg>
         </button>
-        <span className="titlebar-title">Atomic Chat</span>
+        <span className="titlebar-title" data-tauri-drag-region>
+          Atomic Chat
+        </span>
         <div className="titlebar-actions">
           <button className="icon-btn" aria-label="Search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

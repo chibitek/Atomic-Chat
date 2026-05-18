@@ -383,9 +383,9 @@ function General() {
             <Card
               header={
                 <div className="flex items-center justify-between mb-4">
-                  <h1 className="font-medium text-foreground text-base">
+                  <div className="font-medium text-foreground text-base">
                     {t('settings:privacy.analytics')}
-                  </h1>
+                  </div>
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={productAnalytic}
