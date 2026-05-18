@@ -11,6 +11,7 @@ import { ExtensionManager } from '@/lib/extension'
 import { fetch as fetchTauri } from '@tauri-apps/plugin-http'
 import { DefaultProvidersService } from './default'
 import { getModelCapabilities } from '@/lib/models'
+import { OPTIONAL_KEY_PROVIDER_NAMES } from '@/utils/registerRemoteProvider'
 
 export class TauriProvidersService extends DefaultProvidersService {
   fetch(): typeof fetch {
@@ -133,6 +134,48 @@ export class TauriProvidersService extends DefaultProvidersService {
         }
         runtimeProviders.push(provider)
       }
+
+      // Local / optional-key providers (Ollama) have no catalog — their
+      // installed and subscribed (:cloud) models live on the running daemon.
+      // Live-fetch them so they populate the model picker, not only the
+      // Settings page. Merge with any manually-added models.
+      await Promise.all(
+        builtinProviders.map(async (provider) => {
+          if (
+            !(OPTIONAL_KEY_PROVIDER_NAMES as readonly string[]).includes(
+              provider.provider
+            ) ||
+            !provider.base_url
+          ) {
+            return
+          }
+          try {
+            const liveIds = await this.fetchModelsFromProvider(
+              provider as ModelProvider
+            )
+            const existing = new Set(provider.models.map((m) => m.id))
+            const fetched = liveIds
+              .filter((id) => !existing.has(id))
+              .map(
+                (id) =>
+                  ({
+                    id,
+                    name: id,
+                    capabilities: getModelCapabilities(
+                      provider.provider,
+                      id
+                    ),
+                  }) as Model
+              )
+            provider.models = [...provider.models, ...fetched]
+          } catch (e) {
+            console.warn(
+              `[providers] live model fetch failed for ${provider.provider}:`,
+              e
+            )
+          }
+        })
+      )
 
       return runtimeProviders.concat(builtinProviders as ModelProvider[])
     } catch (error: unknown) {
