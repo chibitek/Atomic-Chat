@@ -8,7 +8,6 @@ IDENTITY="${APPLE_SIGNING_IDENTITY:?Задайте APPLE_SIGNING_IDENTITY}"
 ENT="$ROOT/src-tauri/Entitlements.plist"
 APP=""
 for d in \
-  "$ROOT/src-tauri/target/universal-apple-darwin/release/bundle/macos" \
   "$ROOT/src-tauri/target/release/bundle/macos"; do
   if [[ -d "$d" ]]; then
     APP="$(find "$d" -maxdepth 1 -name "*.app" -print -quit)"

@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atomic Chat — Desktop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;540;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/atomic.css">
+<script>(function(){var t=localStorage.getItem("atomic-theme");if(["light","dark","clear","tinted"].indexOf(t)>=0)document.documentElement.setAttribute("data-theme",t);else if(matchMedia("(prefers-color-scheme:dark)").matches)document.documentElement.setAttribute("data-theme","dark");})();</script>
+<style>
+  body { overflow: hidden; }
+  .win { display: flex; flex-direction: column; height: 100vh; min-width: 1024px; background: transparent; }
+
+  /* glass material shorthand */
+  .pane {
+    background: rgba(var(--glass-rgb), var(--glass-o));
+    -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(185%);
+    backdrop-filter: blur(var(--blur-lg)) saturate(185%);
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    box-shadow: inset 0 1px 0 0 rgba(255,255,255,var(--hi-o)), 0 14px 38px -18px rgba(0,0,0,calc(var(--shadow-o) + 0.1));
+  }
+
+  /* ---- floating glass toolbar ---- */
+  .titlebar {
+    display: flex; align-items: center; gap: 0.45rem; flex: none;
+    height: 2.7rem; margin: 0.7rem 0.7rem 0.45rem; padding: 0 0.45rem 0 0.7rem;
+    border-radius: 99px;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    -webkit-backdrop-filter: blur(var(--blur-md)) saturate(180%);
+    backdrop-filter: blur(var(--blur-md)) saturate(180%);
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    box-shadow: inset 0 1px 0 0 rgba(255,255,255,var(--hi-o)), 0 8px 26px -12px rgba(0,0,0,var(--shadow-o));
+    -webkit-app-region: drag; user-select: none;
+  }
+  .titlebar .icon-btn { width: 2.1rem; height: 2.1rem; -webkit-app-region: no-drag; }
+  .titlebar-title { font-size: 0.82rem; font-weight: 560; color: var(--fg-2); margin: 0 auto; }
+  .titlebar-actions { display: flex; gap: 0.1rem; -webkit-app-region: no-drag; }
+
+  /* ---- 3-panel shell — floating glass cards over the backdrop ---- */
+  .shell { display: flex; flex: 1; min-height: 0; gap: 0.7rem; padding: 0 0.7rem 0.7rem; }
+
+  /* sidebar */
+  .sidebar {
+    width: 266px; flex: none; display: flex; flex-direction: column;
+    border-radius: var(--radius-lg); overflow: hidden;
+    background: rgba(var(--glass-rgb), var(--glass-o));
+    -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(185%);
+    backdrop-filter: blur(var(--blur-lg)) saturate(185%);
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    box-shadow: inset 0 1px 0 0 rgba(255,255,255,var(--hi-o)), 0 14px 38px -18px rgba(0,0,0,calc(var(--shadow-o) + 0.1));
+    transition: width 0.32s var(--ease), opacity 0.2s var(--ease), margin 0.32s var(--ease);
+  }
+  .sidebar.collapsed { width: 0; margin-left: -0.7rem; opacity: 0; overflow: hidden; }
+  .sb-head { padding: 0.85rem 0.85rem 0.55rem; }
+  .new-chat {
+    width: 100%; height: 2.55rem; gap: 0.5rem; border-radius: var(--radius);
+    background: rgba(var(--accent-rgb), 0.92); color: #fff;
+    border: 1px solid rgba(var(--accent-rgb), 0.5);
+    font-weight: 540; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 18px -6px rgba(var(--accent-rgb), 0.7);
+    transition: transform 0.14s var(--spring), background 0.2s;
+  }
+  .new-chat:hover { background: rgb(var(--accent-rgb)); }
+  .new-chat:active { transform: scale(0.98); }
+  .search-wrap { padding: 0 0.85rem 0.55rem; }
+  .search {
+    display: flex; align-items: center; gap: 0.5rem; height: 2.2rem;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    border-radius: 99px; padding: 0 0.75rem;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .search:focus-within { border-color: rgba(var(--accent-rgb), 0.6); background: rgba(var(--glass-rgb), var(--glass-o)); }
+  .search input { flex: 1; border: none; background: none; outline: none; font-size: 0.84rem; color: var(--fg); }
+  .search input::placeholder { color: var(--fg-3); }
+  .search svg { width: 0.95rem; height: 0.95rem; color: var(--fg-3); }
+
+  .thread-scroll { flex: 1; overflow-y: auto; padding: 0 0.5rem 0.5rem; }
+  .group-label {
+    font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--fg-3); padding: 0.75rem 0.55rem 0.3rem;
+  }
+  .thread {
+    display: flex; align-items: center; gap: 0.55rem; width: 100%; text-align: left;
+    padding: 0.55rem 0.55rem; border-radius: var(--radius); margin-bottom: 0.15rem;
+    border: 1px solid transparent;
+    transition: background 0.18s var(--ease), border-color 0.18s;
+  }
+  .thread:hover { background: rgba(var(--glass-rgb), var(--glass-o-hover)); }
+  .thread.active {
+    background: rgba(var(--accent-rgb), 0.16);
+    border-color: rgba(var(--accent-rgb), 0.34);
+    box-shadow: inset 3px 0 0 rgb(var(--accent-rgb));
+  }
+  .thread .t-main { flex: 1; min-width: 0; }
+  .thread .t-title { font-size: 0.86rem; font-weight: 540; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .thread .t-sub { font-size: 0.72rem; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .thread .sync { flex: none; display: flex; align-items: center; }
+  .thread .sync svg { width: 0.85rem; height: 0.85rem; color: var(--fg-3); }
+
+  .sb-foot { border-top: 1px solid rgba(var(--border-rgb), var(--border-o)); padding: 0.5rem; }
+  .acct {
+    display: flex; align-items: center; gap: 0.6rem; width: 100%;
+    padding: 0.5rem 0.55rem; border-radius: var(--radius);
+    transition: background 0.18s;
+  }
+  .acct:hover { background: rgba(var(--glass-rgb), var(--glass-o-hover)); }
+  .acct .a-name { font-size: 0.84rem; font-weight: 540; }
+  .acct .a-sub { font-size: 0.71rem; color: var(--fg-2); display: flex; align-items: center; gap: 0.3rem; }
+
+  /* center chat — thin glass so the backdrop bleeds through */
+  .chat {
+    flex: 1; min-width: 0; display: flex; flex-direction: column;
+    border-radius: var(--radius-lg); overflow: hidden;
+    background: rgba(var(--glass-rgb), calc(var(--glass-o) - 0.12));
+    -webkit-backdrop-filter: blur(var(--blur-md)) saturate(175%);
+    backdrop-filter: blur(var(--blur-md)) saturate(175%);
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    box-shadow: inset 0 1px 0 0 rgba(255,255,255,var(--hi-o)), 0 14px 38px -18px rgba(0,0,0,calc(var(--shadow-o) + 0.1));
+  }
+  .chat-head {
+    flex: none; height: 3.5rem; display: flex; align-items: center; gap: 0.5rem;
+    padding: 0 0.85rem; border-bottom: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .chat-title { font-size: 0.92rem; font-weight: 600; }
+  .chat-sub { font-size: 0.74rem; color: var(--fg-2); }
+
+  /* model selector */
+  .model-btn {
+    display: flex; align-items: center; gap: 0.5rem; height: 2.3rem; padding: 0 0.5rem 0 0.75rem;
+    border-radius: 99px; font-size: 0.84rem; font-weight: 540;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    transition: background 0.22s var(--ease), transform 0.12s var(--spring);
+  }
+  .model-btn:hover { background: rgba(var(--glass-rgb), var(--glass-o-hover)); }
+  .model-btn:active { transform: scale(0.98); }
+  .model-btn .chev { width: 0.85rem; height: 0.85rem; color: var(--fg-3); }
+  .model-pop {
+    position: absolute; top: 3rem; left: 0; width: 344px; z-index: 60;
+    border-radius: var(--radius-lg); overflow: hidden;
+    background: rgba(var(--glass-rgb), var(--glass-o-strong));
+    -webkit-backdrop-filter: blur(var(--blur-xl)) saturate(190%);
+    backdrop-filter: blur(var(--blur-xl)) saturate(190%);
+    border: 1px solid rgba(var(--border-rgb), calc(var(--border-o) + 0.05));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,var(--hi-o)), var(--shadow-pop);
+    opacity: 0; transform: translateY(-8px) scale(0.97); pointer-events: none;
+    transition: opacity 0.2s var(--ease), transform 0.22s var(--spring);
+  }
+  .model-pop.open { opacity: 1; transform: none; pointer-events: auto; }
+  .mp-search { padding: 0.6rem; border-bottom: 1px solid rgba(var(--border-rgb), var(--border-o)); }
+  .mp-search input {
+    width: 100%; height: 2.15rem; border-radius: 99px;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    padding: 0 0.85rem; font-size: 0.84rem; outline: none; color: var(--fg);
+  }
+  .mp-search input:focus { border-color: rgba(var(--accent-rgb), 0.6); }
+  .mp-list { max-height: 340px; overflow-y: auto; padding: 0.35rem; }
+  .mp-group { font-size: 0.64rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); padding: 0.55rem 0.6rem 0.3rem; }
+  .mp-item {
+    display: flex; align-items: center; gap: 0.6rem; width: 100%; text-align: left;
+    padding: 0.5rem 0.6rem; border-radius: var(--radius); border: 1px solid transparent;
+    transition: background 0.16s;
+  }
+  .mp-item:hover { background: rgba(var(--glass-rgb), var(--glass-o-hover)); }
+  .mp-item.sel { background: rgba(var(--accent-rgb), 0.16); border-color: rgba(var(--accent-rgb), 0.3); }
+  .mp-item .m-ic {
+    width: 1.8rem; height: 1.8rem; border-radius: var(--radius-sm); flex: none;
+    background: rgba(var(--glass-rgb), var(--glass-o)); display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; border: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .mp-item .m-name { font-size: 0.85rem; font-weight: 540; }
+  .mp-item .m-meta { font-size: 0.71rem; color: var(--fg-2); }
+  .caps { display: flex; gap: 0.25rem; margin-left: auto; flex: none; }
+  .cap {
+    font-size: 0.6rem; font-weight: 600; padding: 0.07rem 0.34rem; border-radius: 0.3rem;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin)); color: var(--fg-2);
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .mp-check { width: 0.95rem; height: 0.95rem; color: rgb(var(--accent-rgb)); flex: none; opacity: 0; }
+  .mp-item.sel .mp-check { opacity: 1; }
+
+  /* messages */
+  .msgs { flex: 1; overflow-y: auto; padding: 1.5rem 0; }
+  .msg-wrap { max-width: 760px; margin: 0 auto; padding: 0 2rem; }
+  .msg { display: flex; gap: 0.85rem; padding: 0.9rem 0; animation: msg-in 0.32s var(--spring); }
+  @keyframes msg-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .msg .m-body { flex: 1; min-width: 0; }
+  .msg .m-name { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; }
+  .msg .m-text { font-size: 0.94rem; line-height: 1.62; }
+  .msg .m-text p + p { margin-top: 0.7rem; }
+  .msg .m-time { font-size: 0.7rem; color: var(--fg-3); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.35rem; }
+  /* user message — blue-tinted glass bubble, pointed corner */
+  .msg-user .m-text {
+    display: inline-block; padding: 0.65rem 0.95rem;
+    background: rgba(var(--accent-rgb), 0.18);
+    -webkit-backdrop-filter: blur(var(--blur-sm)); backdrop-filter: blur(var(--blur-sm));
+    border: 1px solid rgba(var(--accent-rgb), 0.32);
+    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,calc(var(--hi-o) * 0.6));
+  }
+
+  /* code block — glass */
+  .code {
+    margin: 0.85rem 0; border-radius: var(--radius); overflow: hidden;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .code-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.42rem 0.7rem; background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border-bottom: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .code-lang { font-family: var(--font-mono); font-size: 0.72rem; color: var(--fg-2); }
+  .code pre { padding: 0.85rem; overflow-x: auto; }
+  .code code { font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.65; }
+  .tok-k { color: rgb(var(--info)); } .tok-s { color: rgb(var(--success)); } .tok-c { color: var(--fg-3); font-style: italic; }
+  .copy-btn { display: flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; color: var(--fg-2); padding: 0.2rem 0.45rem; border-radius: 99px; }
+  .copy-btn:hover { background: rgba(var(--glass-rgb), var(--glass-o-hover)); color: var(--fg); }
+  .copy-btn svg { width: 0.82rem; height: 0.82rem; }
+
+  /* tool call — glass */
+  .tool {
+    margin: 0.85rem 0; border-radius: var(--radius); overflow: hidden;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .tool-head { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.75rem; font-size: 0.82rem; }
+  .tool-head .t-ic {
+    width: 1.6rem; height: 1.6rem; border-radius: 0.4rem; display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--glass-rgb), var(--glass-o)); border: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .tool-head .t-ic svg { width: 0.85rem; height: 0.85rem; }
+  .tool-head .t-name { font-weight: 600; font-family: var(--font-mono); font-size: 0.78rem; }
+  .tool-body {
+    padding: 0.6rem 0.75rem; border-top: 1px solid rgba(var(--border-rgb), var(--border-o));
+    font-family: var(--font-mono); font-size: 0.74rem; color: var(--fg-2);
+  }
+
+  /* msg actions */
+  .m-actions { display: flex; gap: 0.1rem; margin-top: 0.55rem; }
+  .m-act { display: flex; align-items: center; gap: 0.3rem; font-size: 0.74rem; color: var(--fg-2); padding: 0.3rem 0.55rem; border-radius: 99px; }
+  .m-act:hover { background: rgba(var(--glass-rgb), var(--glass-o-hover)); color: var(--fg); }
+  .m-act svg { width: 0.85rem; height: 0.85rem; }
+  .m-act.on { color: rgb(var(--accent-rgb)); }
+
+  .typing { display: inline-flex; gap: 0.24rem; align-items: center; }
+  .typing i { width: 0.38rem; height: 0.38rem; border-radius: 99px; background: var(--fg-3); animation: blink 1.2s infinite; }
+  .typing i:nth-child(2){ animation-delay: 0.2s; } .typing i:nth-child(3){ animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{ opacity: 0.25; } 40%{ opacity: 1; } }
+  .cursor { display: inline-block; width: 2px; height: 1em; background: rgb(var(--accent-rgb)); vertical-align: -2px; animation: blink 1s steps(2) infinite; }
+
+  /* composer — glass with bottom fade */
+  .composer { flex: none; padding: 0.5rem 2rem 1.1rem; }
+  .composer-inner { max-width: 760px; margin: 0 auto; }
+  .input-box {
+    border-radius: var(--radius-lg);
+    background: rgba(var(--glass-rgb), var(--glass-o-strong));
+    -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(185%);
+    backdrop-filter: blur(var(--blur-lg)) saturate(185%);
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,var(--hi-o)), 0 12px 32px -14px rgba(0,0,0,calc(var(--shadow-o) + 0.1));
+    transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  }
+  .input-box:focus-within {
+    border-color: rgba(var(--accent-rgb), 0.6);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,var(--hi-o)), 0 0 0 4px rgba(var(--accent-rgb), 0.2);
+  }
+  .input-box textarea {
+    width: 100%; border: none; background: none; outline: none; resize: none;
+    padding: 0.85rem 1rem 0.4rem; font-size: 0.92rem; line-height: 1.5;
+    max-height: 180px; font-family: var(--font-sans); color: var(--fg);
+  }
+  .input-box textarea::placeholder { color: var(--fg-3); }
+  .composer-bar { display: flex; align-items: center; gap: 0.15rem; padding: 0.25rem 0.5rem 0.5rem; }
+  .composer-bar .icon-btn { width: 2.15rem; height: 2.15rem; }
+  .send-btn {
+    margin-left: auto; width: 2.2rem; height: 2.2rem; border-radius: 50%;
+    background: rgba(var(--accent-rgb), 0.95); color: #fff;
+    border: 1px solid rgba(var(--accent-rgb), 0.5);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 14px -3px rgba(var(--accent-rgb), 0.7);
+    transition: opacity 0.15s, transform 0.12s var(--spring);
+  }
+  .send-btn:hover { transform: scale(1.06); }
+  .send-btn:active { transform: scale(0.92); }
+  .send-btn svg { width: 1.05rem; height: 1.05rem; }
+  .send-btn:disabled { opacity: 0.32; cursor: default; box-shadow: none; transform: none; }
+  .composer-hint { text-align: center; font-size: 0.71rem; color: var(--fg-3); margin-top: 0.55rem; }
+
+  /* right context (inspector) */
+  .context {
+    width: 304px; flex: none; display: flex; flex-direction: column;
+    border-radius: var(--radius-lg); overflow: hidden;
+    background: rgba(var(--glass-rgb), var(--glass-o));
+    -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(185%);
+    backdrop-filter: blur(var(--blur-lg)) saturate(185%);
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+    box-shadow: inset 0 1px 0 0 rgba(255,255,255,var(--hi-o)), 0 14px 38px -18px rgba(0,0,0,calc(var(--shadow-o) + 0.1));
+    transition: width 0.32s var(--ease), opacity 0.2s, margin 0.32s var(--ease);
+  }
+  .context.collapsed { width: 0; margin-right: -0.7rem; opacity: 0; overflow: hidden; }
+  .ctx-head { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem; height: 3.5rem; border-bottom: 1px solid rgba(var(--border-rgb), var(--border-o)); }
+  .ctx-head h3 { font-size: 0.88rem; }
+  .ctx-scroll { flex: 1; overflow-y: auto; padding: 0.85rem; display: flex; flex-direction: column; gap: 1.15rem; }
+  .ctx-section .ctx-label { font-size: 0.66rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 0.5rem; }
+  .ctx-card {
+    border-radius: var(--radius); padding: 0.75rem 0.85rem;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), var(--border-o));
+  }
+  .stat-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.24rem 0; }
+  .stat-row span:last-child { font-family: var(--font-mono); font-weight: 540; }
+  .tool-toggle { display: flex; align-items: center; gap: 0.55rem; padding: 0.5rem 0; font-size: 0.84rem; }
+  /* glass switch */
+  .switch {
+    width: 2.35rem; height: 1.4rem; border-radius: 99px; position: relative; flex: none;
+    background: rgba(var(--glass-rgb), var(--glass-o-thin));
+    border: 1px solid rgba(var(--border-rgb), calc(var(--border-o) + 0.08));
+    transition: background 0.22s var(--ease), border-color 0.22s;
+  }
+  .switch::after {
+    content: ""; position: absolute; top: 0.15rem; left: 0.15rem;
+    width: 1rem; height: 1rem; border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.24s var(--spring);
+  }
+  .switch.on { background: rgba(var(--accent-rgb), 0.9); border-color: rgba(var(--accent-rgb), 0.5); }
+  .switch.on::after { transform: translateX(0.95rem); }
+  .src-item { display: flex; gap: 0.5rem; align-items: center; padding: 0.45rem 0; font-size: 0.82rem; }
+  .src-item svg { width: 1rem; height: 1rem; color: var(--fg-3); flex: none; }
+
+  @media (max-width: 1280px) { .context { width: 0; margin-right: -0.7rem; opacity: 0; overflow: hidden; } }
+</style>
+</head>
+<body>
+<div class="win">
+
+  <!-- macOS floating glass toolbar -->
+  <div class="titlebar">
+    <div class="traffic" style="-webkit-app-region:no-drag;padding-left:0.15rem"><span class="tc"></span><span class="tm"></span><span class="tz"></span></div>
+    <button class="icon-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar (⌘\\)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+    </button>
+    <div class="titlebar-title">Atomic Chat</div>
+    <div class="titlebar-actions">
+      <a class="icon-btn" href="model-hub.html" aria-label="Model hub" title="Model hub">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 9 4.5-9 4.5-9-4.5L12 3Z"/><path d="m3 12 9 4.5L21 12M3 16.5 12 21l9-4.5"/></svg>
+      </a>
+      <a class="icon-btn" href="provider-settings.html" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.17V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 3.6 15H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 5 8.6l-.07-.05a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 11 4.6V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 2.82 1.17l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20.4 9H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+      </a>
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="Switch glass variant" title="Switch glass variant">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="shell">
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-head">
+        <button class="new-chat" onclick="newChat()">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14m-7-7h14"/></svg>
+          New chat
+        </button>
+      </div>
+      <div class="search-wrap">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" placeholder="Search threads" id="threadSearch" oninput="filterThreads(this.value)" aria-label="Search threads">
+        </div>
+      </div>
+      <div class="thread-scroll" id="threadList"></div>
+      <div class="sb-foot">
+        <a class="acct" href="provider-settings.html">
+          <span class="avatar">AG</span>
+          <div class="grow">
+            <div class="a-name">Alex Greene</div>
+            <div class="a-sub"><span class="dot dot-live"></span> Synced · 3 devices</div>
+          </div>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--fg-3)"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ===== CHAT ===== -->
+    <main class="chat">
+      <header class="chat-head">
+        <div style="position:relative">
+          <button class="model-btn" id="modelBtn" onclick="toggleModelPop()" aria-haspopup="listbox" aria-expanded="false">
+            <span id="modelIcon">☁️</span>
+            <span id="modelName">Claude Sonnet 4.6</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="model-pop" id="modelPop" role="listbox" aria-label="Select model">
+            <div class="mp-search">
+              <input type="text" id="modelSearch" placeholder="Search models…" oninput="renderModels(this.value)" aria-label="Search models">
+            </div>
+            <div class="mp-list" id="modelList"></div>
+          </div>
+        </div>
+        <div class="grow" style="margin-left:0.35rem">
+          <div class="chat-title" id="chatTitle">Vector search over embeddings</div>
+          <div class="chat-sub" id="chatSub">12 messages · synced just now</div>
+        </div>
+        <button class="icon-btn" aria-label="Compare models" title="Split / compare models">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg>
+        </button>
+        <button class="icon-btn" onclick="toggleContext()" aria-label="Toggle context panel" title="Context panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg>
+        </button>
+      </header>
+
+      <div class="msgs" id="msgs"></div>
+
+      <!-- composer -->
+      <div class="composer">
+        <div class="composer-inner">
+          <div class="input-box">
+            <textarea id="composer" rows="1" placeholder="Message Atomic Chat…  (⏎ to send, ⇧⏎ for newline)" aria-label="Message input"></textarea>
+            <div class="composer-bar">
+              <button class="icon-btn" aria-label="Attach file" title="Attach file">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5 12.5 20a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="Add image" title="Vision / image">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="Agent tools" title="MCP agent tools">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a2 2 0 1 0 2.8 2.8l6-6a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.1-2.1 2.6-2.6Z"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="Voice input" title="Voice mode">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>
+              </button>
+              <button class="send-btn" id="sendBtn" onclick="send()" aria-label="Send message" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 19V5m-7 7 7-7 7 7"/></svg>
+              </button>
+            </div>
+          </div>
+          <p class="composer-hint">Running <b id="hintModel">Claude Sonnet 4.6</b> · responses can be inaccurate · <span class="kbd">⌘K</span> commands</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- ===== CONTEXT PANEL ===== -->
+    <aside class="context" id="context">
+      <div class="ctx-head">
+        <h3>Thread context</h3>
+        <button class="icon-btn" onclick="toggleContext()" aria-label="Close context panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div class="ctx-scroll">
+        <div class="ctx-section">
+          <div class="ctx-label">Token usage</div>
+          <div class="ctx-card">
+            <div class="stat-row"><span class="muted">This thread</span><span>18,420</span></div>
+            <div class="stat-row"><span class="muted">Context window</span><span>32K / 200K</span></div>
+            <div class="stat-row"><span class="muted">Est. cost</span><span>$0.061</span></div>
+          </div>
+        </div>
+        <div class="ctx-section">
+          <div class="ctx-label">Sources & attachments</div>
+          <div class="src-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            embeddings-spec.pdf
+          </div>
+          <div class="src-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+            pgvector docs · indexed
+          </div>
+        </div>
+        <div class="ctx-section">
+          <div class="ctx-label">MCP agent tools</div>
+          <div class="ctx-card" style="padding:0.35rem 0.7rem">
+            <label class="tool-toggle"><span class="t-ic" style="width:1.4rem;height:1.4rem;display:inline-flex;align-items:center;justify-content:center">🔎</span><span class="grow">Web search</span><span class="switch on" role="switch" aria-checked="true" tabindex="0" onclick="this.classList.toggle('on')"></span></label>
+            <div class="divider"></div>
+            <label class="tool-toggle"><span class="t-ic" style="width:1.4rem;height:1.4rem;display:inline-flex;align-items:center;justify-content:center">🐍</span><span class="grow">Code interpreter</span><span class="switch on" role="switch" aria-checked="true" tabindex="0" onclick="this.classList.toggle('on')"></span></label>
+            <div class="divider"></div>
+            <label class="tool-toggle"><span class="t-ic" style="width:1.4rem;height:1.4rem;display:inline-flex;align-items:center;justify-content:center">📁</span><span class="grow">Filesystem</span><span class="switch" role="switch" aria-checked="false" tabindex="0" onclick="this.classList.toggle('on')"></span></label>
+          </div>
+        </div>
+        <div class="ctx-section">
+          <div class="ctx-label">Sync</div>
+          <div class="ctx-card">
+            <div class="stat-row"><span class="muted">Status</span><span style="display:flex;align-items:center;gap:0.35rem;color:rgb(var(--success))"><span class="dot dot-live"></span>Live</span></div>
+            <div class="stat-row"><span class="muted">Encryption</span><span>🔒 E2E</span></div>
+            <div class="stat-row"><span class="muted">Devices</span><span>Mac · iPhone · Web</span></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script src="js/theme.js"></script>
+<script>
+  /* ---------- data ---------- */
+  var MODELS = [
+    { g:"On-device 🍎", id:"mlx-llama-3b", ic:"🍎", name:"Llama 3.2 3B · MLX", meta:"Apple Silicon · 1.9 GB", caps:["Fast"], status:"local" },
+    { g:"Local 🏠", id:"llama-8b", ic:"🦙", name:"Llama 3.1 8B", meta:"llama.cpp · Q4 · 4.7 GB", caps:["Tools"], status:"local" },
+    { g:"Local 🏠", id:"qwen-14b", ic:"🌐", name:"Qwen 2.5 14B", meta:"llama.cpp · Q4 · 8.2 GB", caps:["Tools","128K"], status:"local" },
+    { g:"Cloud ☁️", id:"claude-sonnet", ic:"☁️", name:"Claude Sonnet 4.6", meta:"Anthropic · streaming", caps:["Vision","Tools","200K"], status:"cloud" },
+    { g:"Cloud ☁️", id:"gpt-5", ic:"☁️", name:"GPT-5", meta:"OpenAI · streaming", caps:["Vision","Tools"], status:"cloud" },
+    { g:"Cloud ☁️", id:"groq-llama", ic:"⚡", name:"Llama 3.3 70B", meta:"Groq · ~800 tok/s", caps:["Tools"], status:"cloud" }
+  ];
+  var current = MODELS[3];
+
+  var THREADS = [
+    { g:"Today", title:"Vector search over embeddings", sub:"pgvector + cosine similarity…", sync:"live", active:true },
+    { g:"Today", title:"MLX vs llama.cpp benchmarks", sub:"Tokens/sec on M3 Max", sync:"cloud" },
+    { g:"Today", title:"Refactor auth middleware", sub:"Local · not synced", sync:"local" },
+    { g:"Yesterday", title:"Tailwind v4 theme migration", sub:"@theme inline blocks", sync:"cloud" },
+    { g:"Yesterday", title:"Trip planning — Lisbon", sub:"Syncing changes…", sync:"syncing" },
+    { g:"Earlier", title:"SQL window functions", sub:"Encrypted thread", sync:"cloud" },
+    { g:"Earlier", title:"Rust ownership questions", sub:"Local · not synced", sync:"local" }
+  ];
+
+  /* ---------- threads ---------- */
+  function syncIcon(s){
+    if(s==="live")    return '<span class="dot dot-live" title="Live — real-time active"></span>';
+    if(s==="cloud")   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Synced"><path d="M7 18a4 4 0 0 1 0-8 6 6 0 0 1 11.5-1.5A3.5 3.5 0 0 1 18 18H7Z"/><path d="m9 14 2 2 4-4" stroke-width="2.4"/></svg>';
+    if(s==="syncing") return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Syncing" style="animation:spin 1.4s linear infinite"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/></svg>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Local only — not synced"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M11 18h2"/></svg>';
+  }
+  function renderThreads(q){
+    q = (q||"").toLowerCase();
+    var list = document.getElementById("threadList");
+    list.innerHTML = "";
+    var lastG = "";
+    THREADS.forEach(function(t, i){
+      if(q && t.title.toLowerCase().indexOf(q) < 0) return;
+      if(t.g !== lastG){ lastG = t.g;
+        var gl = document.createElement("div"); gl.className="group-label"; gl.textContent=t.g; list.appendChild(gl);
+      }
+      var el = document.createElement("button");
+      el.className = "thread" + (t.active?" active":"");
+      el.innerHTML =
+        '<div class="t-main"><div class="t-title">'+t.title+'</div><div class="t-sub">'+t.sub+'</div></div>'+
+        '<div class="sync">'+syncIcon(t.sync)+'</div>';
+      el.onclick = function(){
+        THREADS.forEach(function(x){ x.active=false; }); t.active=true;
+        document.getElementById("chatTitle").textContent = t.title;
+        document.getElementById("chatSub").textContent = "12 messages · " + (t.sync==="local"?"local only":"synced just now");
+        renderThreads(document.getElementById("threadSearch").value);
+      };
+      list.appendChild(el);
+    });
+  }
+  function filterThreads(v){ renderThreads(v); }
+
+  /* ---------- model selector ---------- */
+  function renderModels(q){
+    q = (q||"").toLowerCase();
+    var list = document.getElementById("modelList");
+    list.innerHTML = "";
+    var lastG = "";
+    MODELS.forEach(function(m){
+      if(q && m.name.toLowerCase().indexOf(q) < 0) return;
+      if(m.g !== lastG){ lastG = m.g;
+        var g = document.createElement("div"); g.className="mp-group"; g.textContent=m.g; list.appendChild(g);
+      }
+      var el = document.createElement("button");
+      el.className = "mp-item" + (m.id===current.id?" sel":"");
+      el.setAttribute("role","option");
+      el.innerHTML =
+        '<span class="m-ic">'+m.ic+'</span>'+
+        '<span style="min-width:0"><span class="m-name">'+m.name+'</span><br><span class="m-meta">'+m.meta+'</span></span>'+
+        '<span class="caps">'+m.caps.map(function(c){return '<span class="cap">'+c+'</span>';}).join("")+'</span>'+
+        '<svg class="mp-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>';
+      el.onclick = function(){ selectModel(m); };
+      list.appendChild(el);
+    });
+    if(!list.children.length) list.innerHTML = '<div class="mp-group" style="text-transform:none;letter-spacing:0">No models match.</div>';
+  }
+  function selectModel(m){
+    current = m;
+    document.getElementById("modelName").textContent = m.name;
+    document.getElementById("modelIcon").textContent = m.ic;
+    document.getElementById("hintModel").textContent = m.name;
+    closeModelPop();
+    var ind = document.getElementById("modelName");
+    ind.style.transition="opacity .15s"; ind.style.opacity="0";
+    setTimeout(function(){ ind.style.opacity="1"; }, 150);
+  }
+  function toggleModelPop(){
+    var p = document.getElementById("modelPop");
+    p.classList.contains("open") ? closeModelPop() : openModelPop();
+  }
+  function openModelPop(){
+    document.getElementById("modelPop").classList.add("open");
+    document.getElementById("modelBtn").setAttribute("aria-expanded","true");
+    renderModels("");
+    setTimeout(function(){ document.getElementById("modelSearch").focus(); }, 30);
+  }
+  function closeModelPop(){
+    document.getElementById("modelPop").classList.remove("open");
+    document.getElementById("modelBtn").setAttribute("aria-expanded","false");
+    document.getElementById("modelSearch").value = "";
+  }
+  document.addEventListener("click", function(e){
+    if(!e.target.closest("#modelPop") && !e.target.closest("#modelBtn")) closeModelPop();
+  });
+
+  /* ---------- messages ---------- */
+  var msgs = document.getElementById("msgs");
+  function now(){ var d=new Date(); var h=d.getHours()%12||12; return h+":"+String(d.getMinutes()).padStart(2,"0")+" "+(d.getHours()<12?"AM":"PM"); }
+
+  function addUser(text){
+    var w = document.createElement("div"); w.className="msg-wrap";
+    w.innerHTML =
+      '<div class="msg msg-user"><span class="avatar avatar-user">AG</span><div class="m-body">'+
+      '<div class="m-name">You</div>'+
+      '<div class="m-text">'+escapeHtml(text)+'</div>'+
+      '<div class="m-time">'+now()+' <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>'+
+      '</div></div>';
+    msgs.appendChild(w); scrollDown();
+  }
+
+  function addAssistant(){
+    var w = document.createElement("div"); w.className="msg-wrap";
+    w.innerHTML =
+      '<div class="msg"><span class="avatar avatar-ai">'+current.ic+'</span><div class="m-body">'+
+      '<div class="m-name">'+current.name+' <span class="badge" style="height:1.2rem">'+(current.status==="local"?"🏠 on-device":"☁️ cloud")+'</span></div>'+
+      '<div class="m-text" id="streamTarget"><span class="typing"><i></i><i></i><i></i></span></div>'+
+      '</div></div>';
+    msgs.appendChild(w); scrollDown();
+    return w.querySelector("#streamTarget");
+  }
+
+  function streamReply(target){
+    var paras = [
+      "Great question. With pgvector you'd store each chunk's embedding in a vector column and query by cosine distance — here's the core query:",
+      "The HNSW index keeps lookups sub-linear, so even at a few million rows you stay in single-digit milliseconds. Want me to add a metadata filter to that query?"
+    ];
+    var codeBlock =
+      '<div class="code"><div class="code-head"><span class="code-lang">sql</span>'+
+      '<button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button></div>'+
+      '<pre><code><span class="tok-c">-- nearest 5 chunks to the query embedding</span>\n'+
+      '<span class="tok-k">SELECT</span> id, content,\n'+
+      '       embedding <span class="tok-k">&lt;=&gt;</span> <span class="tok-s">$1</span> <span class="tok-k">AS</span> distance\n'+
+      '<span class="tok-k">FROM</span> documents\n'+
+      '<span class="tok-k">ORDER BY</span> embedding <span class="tok-k">&lt;=&gt;</span> <span class="tok-s">$1</span>\n'+
+      '<span class="tok-k">LIMIT</span> <span class="tok-s">5</span>;</code></pre></div>';
+    var toolBlock =
+      '<div class="tool"><div class="tool-head"><span class="t-ic">🔎</span>'+
+      '<span class="t-name">web_search</span><span class="badge" style="margin-left:auto;height:1.2rem"><span class="dot dot-live"></span>done</span></div>'+
+      '<div class="tool-body">query: "pgvector HNSW index tuning 2024" → 4 results merged into context</div></div>';
+
+    var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var seq = [
+      {type:"tool", html:toolBlock},
+      {type:"text", text:paras[0]},
+      {type:"code", html:codeBlock},
+      {type:"text", text:paras[1]}
+    ];
+    target.innerHTML = "";
+    var si = 0;
+    function nextSeg(){
+      if(si >= seq.length){ finishReply(target); return; }
+      var seg = seq[si++];
+      if(seg.type === "text"){
+        var p = document.createElement("p");
+        var cur = document.createElement("span"); cur.className="cursor";
+        p.appendChild(cur); target.appendChild(p);
+        var words = seg.text.split(" "), wi = 0;
+        var iv = setInterval(function(){
+          if(wi >= words.length){ clearInterval(iv); cur.remove(); scrollDown(); nextSeg(); return; }
+          cur.insertAdjacentText("beforebegin", (wi?" ":"")+words[wi++]);
+          scrollDown();
+        }, reduce?0:38);
+        if(reduce){ clearInterval(iv); p.textContent=seg.text; nextSeg(); }
+      } else {
+        target.insertAdjacentHTML("beforeend", seg.html);
+        scrollDown();
+        setTimeout(nextSeg, reduce?0:420);
+      }
+    }
+    nextSeg();
+  }
+
+  function finishReply(target){
+    var actions = document.createElement("div");
+    actions.className = "m-actions";
+    actions.innerHTML =
+      '<button class="m-act" onclick="copyText(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button>'+
+      '<button class="m-act" onclick="this.classList.toggle(\'on\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11v9m4-9 1-7a2 2 0 0 1 4 .5L15 11h4a2 2 0 0 1 2 2.4l-1.4 6A2 2 0 0 1 17.6 21H7"/></svg></button>'+
+      '<button class="m-act" onclick="this.classList.toggle(\'on\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 13V4m-4 9-1 7a2 2 0 0 1-4-.5L9 13H5a2 2 0 0 1-2-2.4l1.4-6A2 2 0 0 1 6.4 3H17"/></svg></button>'+
+      '<button class="m-act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/></svg>Regenerate</button>'+
+      '<span class="m-act" style="margin-left:auto;cursor:default"><span class="dot dot-cloud"></span>'+now()+'</span>';
+    target.parentElement.appendChild(actions);
+    scrollDown();
+  }
+
+  function scrollDown(){ msgs.scrollTop = msgs.scrollHeight; }
+  function escapeHtml(s){ return s.replace(/[&<>]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]; }); }
+
+  /* ---------- composer ---------- */
+  var composer = document.getElementById("composer");
+  var sendBtn = document.getElementById("sendBtn");
+  composer.addEventListener("input", function(){
+    this.style.height = "auto";
+    this.style.height = Math.min(this.scrollHeight, 180) + "px";
+    sendBtn.disabled = !this.value.trim();
+  });
+  composer.addEventListener("keydown", function(e){
+    if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(); }
+  });
+  var busy = false;
+  function send(){
+    var text = composer.value.trim();
+    if(!text || busy) return;
+    busy = true;
+    addUser(text);
+    composer.value = ""; composer.style.height = "auto"; sendBtn.disabled = true;
+    var target = addAssistant();
+    setTimeout(function(){ streamReply(target); busy = false; }, 650);
+  }
+  function newChat(){
+    msgs.innerHTML = "";
+    document.getElementById("chatTitle").textContent = "New chat";
+    document.getElementById("chatSub").textContent = "0 messages";
+    seedThread(true);
+  }
+
+  function copyCode(btn){
+    var code = btn.closest(".code").querySelector("code").innerText;
+    navigator.clipboard && navigator.clipboard.writeText(code);
+    var orig = btn.innerHTML;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Copied';
+    setTimeout(function(){ btn.innerHTML = orig; }, 1600);
+  }
+  function copyText(btn){
+    var t = btn.closest(".m-body").querySelector(".m-text").innerText;
+    navigator.clipboard && navigator.clipboard.writeText(t);
+    btn.classList.add("on");
+    setTimeout(function(){ btn.classList.remove("on"); }, 1400);
+  }
+
+  /* ---------- panels ---------- */
+  function toggleSidebar(){ document.getElementById("sidebar").classList.toggle("collapsed"); }
+  function toggleContext(){ document.getElementById("context").classList.toggle("collapsed"); }
+  document.addEventListener("keydown", function(e){
+    if((e.metaKey||e.ctrlKey) && e.key === "\\"){ e.preventDefault(); toggleSidebar(); }
+    if(e.key === "Escape") closeModelPop();
+  });
+
+  /* ---------- seed ---------- */
+  function seedThread(empty){
+    if(empty) return;
+    msgs.innerHTML = "";
+    addUser("How do I do nearest-neighbour search over embeddings in Postgres?");
+    var t = addAssistant();
+    matchMediaInstant(t);
+  }
+  function matchMediaInstant(t){
+    t.innerHTML =
+      '<div class="tool"><div class="tool-head"><span class="t-ic">🔎</span><span class="t-name">web_search</span>'+
+      '<span class="badge" style="margin-left:auto;height:1.2rem"><span class="dot dot-live"></span>done</span></div>'+
+      '<div class="tool-body">query: "pgvector HNSW index tuning 2024" → 4 results merged into context</div></div>'+
+      '<p>Great question. With pgvector you store each chunk\'s embedding in a vector column and query by cosine distance — here\'s the core query:</p>'+
+      '<div class="code"><div class="code-head"><span class="code-lang">sql</span>'+
+      '<button class="copy-btn" onclick="copyCode(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy</button></div>'+
+      '<pre><code><span class="tok-c">-- nearest 5 chunks to the query embedding</span>\n'+
+      '<span class="tok-k">SELECT</span> id, content,\n       embedding <span class="tok-k">&lt;=&gt;</span> <span class="tok-s">$1</span> <span class="tok-k">AS</span> distance\n'+
+      '<span class="tok-k">FROM</span> documents\n<span class="tok-k">ORDER BY</span> embedding <span class="tok-k">&lt;=&gt;</span> <span class="tok-s">$1</span>\n<span class="tok-k">LIMIT</span> <span class="tok-s">5</span>;</code></pre></div>'+
+      '<p>The HNSW index keeps lookups sub-linear, so even at a few million rows you stay in single-digit milliseconds. Want me to add a metadata filter?</p>';
+    finishReply(t);
+  }
+
+  renderThreads("");
+  seedThread(false);
+</script>
+</body>
+</html>

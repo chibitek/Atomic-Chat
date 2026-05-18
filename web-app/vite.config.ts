@@ -44,10 +44,14 @@ function injectGoogleAnalytics(gaMeasurementId?: string): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, process.cwd(), '')
+  // .env lives at the monorepo root, not this web-app workspace dir. Without
+  // this, VITE_SUPABASE_* are empty in the build and the Supabase client throws
+  // at load time — leaving the app stuck on the HTML loading spinner.
+  const envDir = path.resolve(__dirname, '..')
+  const env = loadEnv(mode, envDir, '')
 
   return {
+    envDir,
     plugins: [
       TanStackRouterVite({
         target: 'react',

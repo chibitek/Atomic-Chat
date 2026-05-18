@@ -25,8 +25,7 @@ endif
 # Install required Rust targets for macOS universal builds
 install-rust-targets:
 ifeq ($(shell uname -s),Darwin)
-	@echo "Detected macOS, installing universal build targets..."
-	rustup target add x86_64-apple-darwin
+	@echo "Detected macOS, installing Apple Silicon build target..."
 	rustup target add aarch64-apple-darwin
 	@echo "Rust targets installed successfully!"
 else
@@ -715,13 +714,8 @@ endif
 build-cli:
 ifeq ($(shell uname -s),Darwin)
 	cd src-tauri && cargo build --release --features cli --bin jan-cli --target aarch64-apple-darwin
-	cd src-tauri && cargo build --release --features cli --bin jan-cli --target x86_64-apple-darwin
-	lipo -create \
-		src-tauri/target/aarch64-apple-darwin/release/jan-cli \
-		src-tauri/target/x86_64-apple-darwin/release/jan-cli \
-		-output src-tauri/resources/bin/jan-cli
+	cp src-tauri/target/aarch64-apple-darwin/release/jan-cli src-tauri/resources/bin/jan-cli
 	chmod +x src-tauri/resources/bin/jan-cli
-	mkdir -p src-tauri/target/universal-apple-darwin/release
 
 	echo "Checking for code signing identity..."; \
 	SIGNING_IDENTITY=$$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)".*/\1/'); \
@@ -732,8 +726,6 @@ ifeq ($(shell uname -s),Darwin)
 	else \
 		echo "Warning: No Developer ID Application identity found. Skipping code signing (notarization will fail)."; \
 	fi
-
-	cp src-tauri/resources/bin/jan-cli src-tauri/target/universal-apple-darwin/release/jan-cli
 else ifeq ($(OS),Windows_NT)
 	cd src-tauri && cargo build --release --features cli --bin jan-cli
 	powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path 'src-tauri/resources/bin' | Out-Null; Copy-Item 'src-tauri/target/release/jan-cli.exe' 'src-tauri/resources/bin/jan-cli.exe' -Force"
@@ -757,10 +749,10 @@ build: install-and-build install-rust-targets
 	yarn build
 
 # ──────────────────────────────────────────────────────────────
-# macOS release build: universal .app + .dmg с версией в VOLNAME
+# macOS release build: Apple Silicon (arm64) .app + .dmg с версией в VOLNAME
 # ──────────────────────────────────────────────────────────────
 # Шаги:
-#   1. yarn tauri build (universal-apple-darwin, macos-конфиг)
+#   1. yarn tauri build (aarch64-apple-darwin native, macos-конфиг)
 #      — Tauri подписывает и нотаризует .app, создаёт и подписывает .dmg
 #   2. scripts/rename-dmg-volume.sh
 #      — переименовывает том DMG в "Atomic Chat v<version>"
@@ -772,8 +764,8 @@ build: install-and-build install-rust-targets
 # пропустится при отсутствии Apple credentials в окружении.
 build-mac:
 ifeq ($(shell uname -s),Darwin)
-	yarn tauri build --target universal-apple-darwin --config src-tauri/tauri.macos.conf.json
-	@DMG=$$(ls -t src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg 2>/dev/null | head -1); \
+	yarn tauri build --config src-tauri/tauri.macos.conf.json
+	@DMG=$$(ls -t src-tauri/target/release/bundle/dmg/*.dmg 2>/dev/null | head -1); \
 	if [ -z "$$DMG" ] || [ ! -f "$$DMG" ]; then \
 		echo "Error: DMG not found after tauri build"; \
 		exit 1; \

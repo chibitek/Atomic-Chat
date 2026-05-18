@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atomic Chat — Private AI. Your Data. Your Models.</title>
+<meta name="description" content="An open-source ChatGPT alternative that runs local LLMs privately on-device, connects to any cloud provider, and syncs end-to-end encrypted across macOS, iOS and Web.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;540;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/atomic.css">
+<script>(function(){var t=localStorage.getItem("atomic-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.setAttribute("data-theme","dark");})();</script>
+<style>
+  body { background: var(--background); }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 1.5rem; }
+
+  /* nav */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: oklch(from var(--background) l c h / 0.78); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-in { display: flex; align-items: center; gap: 1.5rem; height: 4rem; }
+  .logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 1.02rem; letter-spacing: -0.02em; }
+  .logo svg { width: 1.6rem; height: 1.6rem; }
+  .nav-links { display: flex; gap: 0.35rem; margin-left: auto; }
+  .nav-links a { font-size: 0.88rem; color: var(--muted-foreground); padding: 0.45rem 0.7rem; border-radius: var(--radius-sm); }
+  .nav-links a:hover { color: var(--foreground); background: var(--accent); }
+  .nav-cta { display: flex; align-items: center; gap: 0.5rem; }
+  @media (max-width: 720px) { .nav-links { display: none; } }
+
+  /* hero */
+  .hero { padding: 5rem 0 3.5rem; text-align: center; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 1.5rem;
+    font-size: 0.78rem; font-weight: 540; padding: 0.32rem 0.75rem; border-radius: 99px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--muted-foreground);
+  }
+  .hero h1 {
+    font-size: clamp(2.4rem, 6vw, 4rem); line-height: 1.04; letter-spacing: -0.035em;
+    font-weight: 700; max-width: 16ch; margin: 0 auto 1.15rem; text-wrap: balance;
+  }
+  .hero .sub { font-size: clamp(1rem, 2.2vw, 1.2rem); color: var(--muted-foreground); max-width: 52ch; margin: 0 auto 2rem; text-wrap: pretty; }
+  .hero-cta { display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap; }
+  .hero-note { margin-top: 1rem; font-size: 0.8rem; color: var(--muted-foreground); }
+
+  /* app mockup */
+  .mockup {
+    margin: 3.5rem auto 0; max-width: 1000px;
+    border: 1px solid var(--border); border-radius: var(--radius-xl);
+    overflow: hidden; box-shadow: var(--shadow-modal); background: var(--surface);
+  }
+  .mock-bar { display: flex; align-items: center; gap: 0.5rem; height: 2.6rem; padding: 0 0.9rem; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .mock-bar .traffic span { width: 0.7rem; height: 0.7rem; }
+  .mock-bar .mb-title { margin: 0 auto; font-size: 0.8rem; color: var(--muted-foreground); }
+  .mock-body { display: grid; grid-template-columns: 200px 1fr; height: 420px; }
+  .mock-sb { background: var(--surface); border-right: 1px solid var(--border); padding: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .mock-newchat { height: 2.1rem; border-radius: var(--radius-sm); background: var(--primary); color: var(--primary-foreground); display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 540; }
+  .mock-thread { height: 2.4rem; border-radius: var(--radius-sm); background: var(--accent); }
+  .mock-thread.dim { background: transparent; border: 1px solid var(--border); opacity: 0.6; }
+  .mock-chat { background: var(--background); padding: 1.4rem 1.6rem; display: flex; flex-direction: column; gap: 0.9rem; overflow: hidden; }
+  .mock-msg { max-width: 78%; }
+  .mock-msg.u { align-self: flex-end; background: var(--surface-2); border: 1px solid var(--border); border-radius: 0.9rem 0.9rem 0.2rem 0.9rem; padding: 0.6rem 0.85rem; font-size: 0.82rem; }
+  .mock-msg.a { align-self: flex-start; }
+  .mock-msg.a .mm-name { font-size: 0.72rem; font-weight: 600; color: var(--muted-foreground); margin-bottom: 0.3rem; }
+  .mock-msg.a .mm-body { font-size: 0.82rem; line-height: 1.6; color: var(--foreground); }
+  .mock-code { margin-top: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.55rem 0.7rem; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted-foreground); }
+  .mock-input { margin-top: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); height: 2.6rem; display: flex; align-items: center; padding: 0 0.85rem; font-size: 0.8rem; color: var(--muted-foreground); }
+  @media (max-width: 640px) { .mock-body { grid-template-columns: 1fr; } .mock-sb { display: none; } .mock-body { height: 340px; } }
+
+  /* logos / trust */
+  .trust { padding: 2.5rem 0; border-bottom: 1px solid var(--border); }
+  .trust p { text-align: center; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 1.1rem; }
+  .trust-row { display: flex; gap: 1.5rem 2.5rem; justify-content: center; flex-wrap: wrap; }
+  .trust-row span { font-size: 0.95rem; font-weight: 600; color: var(--muted-foreground); display: flex; align-items: center; gap: 0.4rem; }
+
+  /* section */
+  .section { padding: 5rem 0; }
+  .sec-head { text-align: center; max-width: 38ch; margin: 0 auto 3rem; }
+  .sec-head h2 { font-size: clamp(1.8rem, 4vw, 2.4rem); letter-spacing: -0.03em; margin-bottom: 0.7rem; }
+  .sec-head p { color: var(--muted-foreground); font-size: 1.02rem; text-wrap: pretty; }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
+  @media (max-width: 880px) { .features { grid-template-columns: 1fr; } }
+  .feat {
+    border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem;
+    background: var(--surface); transition: border-color 0.15s, transform 0.15s;
+  }
+  .feat:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+  .feat .f-ic { width: 2.6rem; height: 2.6rem; border-radius: var(--radius); background: var(--surface-2); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+  .feat .f-ic svg { width: 1.3rem; height: 1.3rem; }
+  .feat h3 { font-size: 1.05rem; margin-bottom: 0.4rem; }
+  .feat p { font-size: 0.9rem; color: var(--muted-foreground); line-height: 1.55; }
+  .feat.wide { grid-column: span 3; }
+  @media (max-width: 880px) { .feat.wide { grid-column: span 1; } }
+
+  /* split: local vs cloud */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+  @media (max-width: 720px) { .split { grid-template-columns: 1fr; } }
+  .split-card { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.75rem; background: var(--surface); }
+  .split-card .sc-ic { font-size: 1.6rem; margin-bottom: 0.6rem; }
+  .split-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+  .split-card > p { font-size: 0.9rem; color: var(--muted-foreground); margin-bottom: 1.1rem; }
+  .split-list { display: flex; flex-direction: column; gap: 0.55rem; }
+  .split-list div { display: flex; gap: 0.5rem; font-size: 0.88rem; align-items: flex-start; }
+  .split-list svg { width: 1rem; height: 1rem; color: var(--success); flex: none; margin-top: 0.15rem; }
+
+  /* steps */
+  .steps3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.85rem; }
+  @media (max-width: 720px) { .steps3 { grid-template-columns: 1fr; } }
+  .step3 { padding: 1.5rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); }
+  .step3 .s-num { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--muted-foreground); margin-bottom: 0.8rem; }
+  .step3 h3 { font-size: 1.05rem; margin-bottom: 0.35rem; }
+  .step3 p { font-size: 0.88rem; color: var(--muted-foreground); }
+
+  /* cta */
+  .cta-band {
+    border: 1px solid var(--border); border-radius: var(--radius-xl);
+    background: var(--surface); padding: 3.5rem 2rem; text-align: center;
+  }
+  .cta-band h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.03em; margin-bottom: 0.6rem; }
+  .cta-band p { color: var(--muted-foreground); margin-bottom: 1.6rem; }
+  .waitlist { display: flex; gap: 0.5rem; max-width: 420px; margin: 0 auto; }
+  .waitlist input { flex: 1; }
+  @media (max-width: 480px) { .waitlist { flex-direction: column; } }
+  .wl-ok { color: var(--success); font-size: 0.88rem; margin-top: 0.8rem; display: none; align-items: center; gap: 0.4rem; justify-content: center; }
+  .wl-ok.show { display: flex; }
+  .wl-ok svg { width: 1rem; height: 1rem; }
+
+  /* footer */
+  footer { border-top: 1px solid var(--border); padding: 2.5rem 0; margin-top: 5rem; }
+  .foot-in { display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+  .foot-in .muted { font-size: 0.84rem; }
+  .foot-links { display: flex; gap: 1.2rem; margin-left: auto; }
+  .foot-links a { font-size: 0.84rem; color: var(--muted-foreground); }
+  .foot-links a:hover { color: var(--foreground); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="index.html">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="3.2" fill="currentColor"/>
+        <g fill="none" stroke="currentColor" stroke-width="1.6">
+          <ellipse cx="16" cy="16" rx="13" ry="5.3"/>
+          <ellipse cx="16" cy="16" rx="13" ry="5.3" transform="rotate(60 16 16)"/>
+          <ellipse cx="16" cy="16" rx="13" ry="5.3" transform="rotate(120 16 16)"/>
+        </g>
+      </svg>
+      Atomic Chat
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#models">Models</a>
+      <a href="model-hub.html">Model Hub</a>
+    </div>
+    <div class="nav-cta">
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36 6.36-.7-.7M6.34 6.34l-.7-.7m12.72 0-.7.7M6.34 17.66l-.7.7"/><circle cx="12" cy="12" r="4"/></svg>
+      </button>
+      <a class="btn btn-primary btn-sm" href="onboarding.html">Download</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <span class="pill"><span class="dot" style="background:var(--success)"></span> Open source · MIT licensed · v2.0</span>
+  <h1>Private AI. Your data. Your models.</h1>
+  <p class="sub">Atomic Chat is an open-source ChatGPT alternative that runs language models privately on your device — and connects to any cloud provider when you want more. Encrypted, synced, yours.</p>
+  <div class="hero-cta">
+    <a class="btn btn-primary btn-lg" href="onboarding.html">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.7 2.2-4 2.3-4.1-1.3-1.8-3.2-2.1-3.9-2.1-1.7-.2-3.2 1-4 1-.8 0-2.1-1-3.4-1-1.8 0-3.4 1-4.3 2.6-1.8 3.2-.5 8 1.3 10.6.9 1.3 1.9 2.7 3.3 2.7 1.3-.1 1.8-.9 3.4-.9 1.6 0 2 .9 3.4.8 1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.4-2.9 1.4-3z"/></svg>
+      Download for macOS
+    </a>
+    <a class="btn btn-secondary btn-lg" href="onboarding-ios.html">Get the iOS app</a>
+  </div>
+  <p class="hero-note">Also runs in the browser as a PWA · No account required to start</p>
+
+  <!-- product mockup -->
+  <div class="mockup" role="img" aria-label="Atomic Chat desktop interface preview">
+    <div class="mock-bar">
+      <div class="traffic"><span class="tc"></span><span class="tm"></span><span class="tz"></span></div>
+      <span class="mb-title">Atomic Chat</span>
+    </div>
+    <div class="mock-body">
+      <div class="mock-sb">
+        <div class="mock-newchat">+ New chat</div>
+        <div class="mock-thread"></div>
+        <div class="mock-thread dim"></div>
+        <div class="mock-thread dim"></div>
+        <div class="mock-thread dim"></div>
+      </div>
+      <div class="mock-chat">
+        <div class="mock-msg u">How do I query embeddings in Postgres?</div>
+        <div class="mock-msg a">
+          <div class="mm-name">☁️ Claude Sonnet 4.6</div>
+          <div class="mm-body">Use pgvector and order by cosine distance — here's the core query:</div>
+          <div class="mock-code">SELECT id FROM docs ORDER BY embedding &lt;=&gt; $1 LIMIT 5;</div>
+        </div>
+        <div class="mock-input">Message Atomic Chat…</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="trust">
+  <div class="wrap">
+    <p>Runs your favourite models — local and cloud</p>
+    <div class="trust-row">
+      <span>🦙 Llama</span><span>🌐 Qwen</span><span>🍎 Apple MLX</span>
+      <span>☁️ OpenAI</span><span>✳ Claude</span><span>⚡ Groq</span><span>🦙 Ollama</span>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="features">
+  <div class="sec-head">
+    <h2>Built privacy-first, not privacy-optional</h2>
+    <p>Everything below ships in the open-source app. No telemetry, no lock-in.</p>
+  </div>
+  <div class="features">
+    <div class="feat">
+      <div class="f-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+      <h3>Runs on-device</h3>
+      <p>llama.cpp and Apple MLX models run fully offline. Your conversations never touch a server unless you choose a cloud model.</p>
+    </div>
+    <div class="feat">
+      <div class="f-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 9 4.5-9 4.5-9-4.5L12 3Z"/><path d="m3 12 9 4.5L21 12M3 16.5 12 21l9-4.5"/></svg></div>
+      <h3>Switch models mid-thread</h3>
+      <p>Start a draft on a tiny local model, finish it on GPT-5 or Claude. One conversation, any model, no copy-paste.</p>
+    </div>
+    <div class="feat">
+      <div class="f-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/></svg></div>
+      <h3>Real-time sync</h3>
+      <p>Conversations stay live across macOS, iOS and Web. Send on your phone, watch it appear on your Mac instantly.</p>
+    </div>
+    <div class="feat">
+      <div class="f-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11h16M4 11a8 8 0 0 1 16 0M4 11v3a8 8 0 0 0 16 0v-3"/><circle cx="9" cy="11" r="1"/><circle cx="15" cy="11" r="1"/></svg></div>
+      <h3>Agents with MCP tools</h3>
+      <p>Give models web search, a code interpreter and filesystem access through the Model Context Protocol.</p>
+    </div>
+    <div class="feat">
+      <div class="f-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11h16M4 11a8 8 0 0 1 16 0M4 11v3a8 8 0 0 0 16 0v-3"/></svg></div>
+      <h3>Encrypted API keys</h3>
+      <p>Provider keys are encrypted with your device key before they ever sync. Atomic's servers only ever see ciphertext.</p>
+    </div>
+    <div class="feat">
+      <div class="f-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 18 22 12 16 6M8 6 2 12l6 6"/></svg></div>
+      <h3>Open source, no lock-in</h3>
+      <p>MIT-licensed and self-hostable. Export every conversation as Markdown or JSON whenever you want.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="how">
+  <div class="sec-head">
+    <h2>Local when it matters. Cloud when you need it.</h2>
+    <p>You decide per message — Atomic never makes that call for you.</p>
+  </div>
+  <div class="split">
+    <div class="split-card">
+      <div class="sc-ic">🏠</div>
+      <h3>On-device</h3>
+      <p>For anything sensitive — code, notes, personal questions.</p>
+      <div class="split-list">
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> Works fully offline, even in airplane mode</div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> No usage costs, no rate limits</div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> MLX-tuned for Apple Silicon performance</div>
+      </div>
+    </div>
+    <div class="split-card">
+      <div class="sc-ic">☁️</div>
+      <h3>Cloud providers</h3>
+      <p>For the hardest problems — bring your own keys.</p>
+      <div class="split-list">
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> OpenAI, Claude, Groq, Ollama &amp; OpenAI-compatible</div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> Per-provider token &amp; cost tracking</div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> Keys encrypted end-to-end before sync</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="models">
+  <div class="sec-head">
+    <h2>Set up in under a minute</h2>
+    <p>From download to your first answer — no account, no credit card.</p>
+  </div>
+  <div class="steps3">
+    <div class="step3">
+      <div class="s-num">01</div>
+      <h3>Install &amp; choose a mode</h3>
+      <p>Pick on-device, cloud, or both. Atomic suggests a local model sized for your machine.</p>
+    </div>
+    <div class="step3">
+      <div class="s-num">02</div>
+      <h3>Download or connect</h3>
+      <p>Grab a local model from the Model Hub, or paste a provider key — encrypted instantly.</p>
+    </div>
+    <div class="step3">
+      <div class="s-num">03</div>
+      <h3>Start chatting</h3>
+      <p>Ask anything. Switch models mid-thread, attach files, enable agent tools whenever you like.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap">
+  <div class="cta-band">
+    <h2>Take your AI back.</h2>
+    <p>Free, open source, and yours. Join the waitlist for early builds and release notes.</p>
+    <form class="waitlist" onsubmit="event.preventDefault();this.querySelector('input').value='';document.getElementById('wlOk').classList.add('show');">
+      <input class="input" type="email" placeholder="you@example.com" required aria-label="Email for waitlist">
+      <button class="btn btn-primary" type="submit">Join waitlist</button>
+    </form>
+    <div class="wl-ok" id="wlOk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> You're on the list — we'll be in touch.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <a class="logo" href="index.html" style="font-size:0.95rem">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="3.2" fill="currentColor"/>
+        <g fill="none" stroke="currentColor" stroke-width="1.6">
+          <ellipse cx="16" cy="16" rx="13" ry="5.3"/>
+          <ellipse cx="16" cy="16" rx="13" ry="5.3" transform="rotate(60 16 16)"/>
+          <ellipse cx="16" cy="16" rx="13" ry="5.3" transform="rotate(120 16 16)"/>
+        </g>
+      </svg>
+      Atomic Chat
+    </a>
+    <span class="muted">Private AI. Your data. Your models.</span>
+    <div class="foot-links">
+      <a href="#">GitHub</a><a href="#">Docs</a><a href="#">Privacy</a><a href="index.html">All screens</a>
+    </div>
+  </div>
+</footer>
+
+<script src="js/theme.js"></script>
+</body>
+</html>

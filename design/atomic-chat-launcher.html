@@ -1,0 +1,327 @@
+
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atomic Chat — Design System &amp; Screens</title>
+<link rel="preconnect" href="https://f
+
+
+
+
+onts.googleapis.com">
+
+/ onts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;540;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>(function(){var t=localStorage.getItem("atomic-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.setAttribute("data-theme","dark");})();</script>
+<style>
+  :root {
+    --background: oklch(1 0 0); --surface: oklch(0.985 0 0); --surface-2: oklch(0.97 0 0);
+    --foreground: oklch(0.145 0 0); --muted-foreground: oklch(0.49 0 0);
+    --primary: oklch(0.205 0 0); --primary-foreground: oklch(0.985 0 0);
+    --border: oklch(0.922 0 0); --border-strong: oklch(0.86 0 0);
+    --accent: oklch(0.955 0 0); --ring: oklch(0.708 0 0); --success: oklch(0.62 0.13 152);
+    --radius: 0.625rem; --radius-lg: 0.875rem; --radius-xl: 1.25rem;
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    color-scheme: light;
+  }
+  [data-theme="dark"] {
+    --background: oklch(0.165 0 0); --surface: oklch(0.205 0 0); --surface-2: oklch(0.245 0 0);
+    --foreground: oklch(0.97 0 0); --muted-foreground: oklch(0.66 0 0);
+    --primary: oklch(0.97 0 0); --primary-foreground: oklch(0.205 0 0);
+    --border: oklch(1 0 0 / 0.10); --border-strong: oklch(1 0 0 / 0.18);
+    --accent: oklch(0.27 0 0); --ring: oklch(0.55 0 0); --success: oklch(0.70 0.14 152);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans); background: var(--surface-2); color: var(--foreground);
+    -webkit-font-smoothing: antialiased; line-height: 1.55;
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--foreground); color: var(--background); }
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; border-radius: 0.4rem; }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 1.5rem; }
+
+  header { padding: 3.5rem 0 2.5rem; }
+  .top { display: flex; align-items: center; gap: 1rem; margin-bottom: 2.25rem; }
+  .logo { display: flex; align-items: center; gap: 0.55rem; font-weight: 600; font-size: 1.05rem; letter-spacing: -0.02em; }
+  .logo svg { width: 1.8rem; height: 1.8rem; }
+  .theme-btn {
+    margin-left: auto; display: flex; align-items: center; gap: 0.4rem;
+    border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius);
+    padding: 0.45rem 0.8rem; font: inherit; font-size: 0.84rem; font-weight: 540; cursor: pointer; color: inherit;
+  }
+  .theme-btn svg { width: 1rem; height: 1rem; }
+  .hero h1 { font-size: clamp(2rem, 5vw, 2.85rem); letter-spacing: -0.035em; line-height: 1.08; margin-bottom: 0.65rem; max-width: 18ch; }
+  .hero p { color: var(--muted-foreground); font-size: 1.05rem; max-width: 56ch; }
+  .meta-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.5rem; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.76rem; font-weight: 540;
+    padding: 0.3rem 0.65rem; border-radius: 99px; background: var(--surface);
+    border: 1px solid var(--border); color: var(--muted-foreground);
+  }
+  .dot { width: 0.5rem; height: 0.5rem; border-radius: 99px; display: inline-block; }
+
+  .section-label {
+    font-size: 0.74rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted-foreground); margin: 2.5rem 0 0.9rem;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
+  @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    display: flex; flex-direction: column; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .card:hover { border-color: var(--border-strong); transform: translateY(-3px); box-shadow: 0 12px 28px -12px oklch(0 0 0 / 0.22); }
+
+  .preview { height: 150px; background: var(--surface-2); border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
+  .pv-window { position: absolute; inset: 14px; background: var(--background); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .pv-bar { height: 16px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 3px; padding: 0 6px; }
+  .pv-bar i { width: 5px; height: 5px; border-radius: 99px; background: var(--border-strong); }
+  .pv-cols { display: flex; height: calc(100% - 16px); }
+  .pv-side { width: 26%; background: var(--surface); border-right: 1px solid var(--border); padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .pv-side b { height: 9px; border-radius: 3px; background: var(--primary); display: block; }
+  .pv-side i { height: 7px; border-radius: 3px; background: var(--accent); display: block; }
+  .pv-main { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+  .pv-line { height: 6px; border-radius: 3px; background: var(--accent); }
+  .pv-line.s { width: 55%; } .pv-line.m { width: 78%; }
+  .pv-bub { align-self: flex-end; width: 50%; height: 16px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); }
+  .pv-accent { background: var(--foreground); }
+  .pv-phone { position: absolute; left: 50%; top: 16px; bottom: -20px; transform: translateX(-50%); width: 92px; background: var(--background); border: 2px solid var(--border-strong); border-radius: 16px 16px 0 0; padding: 9px 7px; }
+  .pv-notch { width: 30px; height: 6px; background: var(--border-strong); border-radius: 99px; margin: 0 auto 7px; }
+  .pv-phone .pv-line { margin-bottom: 4px; }
+  .pv-wg { position: absolute; inset: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pv-wg div { background: var(--background); border: 1px solid var(--border); border-radius: 9px; }
+  .pv-wg div:last-child { grid-column: span 2; }
+
+  .card-body { padding: 0.95rem 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
+  .card-body .ct { display: flex; align-items: center; gap: 0.5rem; }
+  .card-body h3 { font-size: 0.98rem; font-weight: 600; }
+  .card-body .tag { font-size: 0.66rem; font-weight: 600; padding: 0.1rem 0.4rem; border-radius: 0.3rem; background: var(--surface-2); color: var(--muted-foreground); border: 1px solid var(--border); }
+  .card-body p { font-size: 0.83rem; color: var(--muted-foreground); flex: 1; }
+  .card-body .open { font-size: 0.8rem; font-weight: 540; display: flex; align-items: center; gap: 0.3rem; margin-top: 0.35rem; }
+  .card-body .open svg { width: 0.9rem; height: 0.9rem; }
+
+  .tokens { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.85rem; }
+  @media (max-width: 700px) { .tokens { grid-template-columns: 1fr; } }
+  .tok-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.1rem 1.2rem; }
+  .tok-card h4 { font-size: 0.82rem; margin-bottom: 0.7rem; }
+  .swatches { display: flex; gap: 0.4rem; }
+  .sw { flex: 1; height: 2.4rem; border-radius: 0.4rem; border: 1px solid var(--border); }
+  .sw-cap { font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted-foreground); margin-top: 0.45rem; }
+  .type-sample { display: flex; flex-direction: column; gap: 0.3rem; }
+  .type-sample .t1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.03em; }
+  .type-sample .t2 { font-size: 0.92rem; color: var(--muted-foreground); }
+  .type-sample .t3 { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted-foreground); }
+
+  footer { padding: 3rem 0; color: var(--muted-foreground); font-size: 0.84rem; }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <div class="top">
+    <div class="logo">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="3.2" fill="currentColor"/>
+        <g fill="none" stroke="currentColor" stroke-width="1.6">
+          <ellipse cx="16" cy="16" rx="13" ry="5.3"/>
+          <ellipse cx="16" cy="16" rx="13" ry="5.3" transform="rotate(60 16 16)"/>
+          <ellipse cx="16" cy="16" rx="13" ry="5.3" transform="rotate(120 16 16)"/>
+        </g>
+      </svg>
+      Atomic Chat
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36 6.36-.7-.7M6.34 6.34l-.7-.7m12.72 0-.7.7M6.34 17.66l-.7.7"/><circle cx="12" cy="12" r="4"/></svg>
+      <span data-theme-label>Light</span>
+    </button>
+  </div>
+  <div class="hero">
+    <h1>Atomic Chat — design system &amp; screens</h1>
+    <p>A privacy-first AI chat app for macOS, iOS and Web. Every screen below is a working high-fidelity prototype — light/dark, accessible, monochrome by design.</p>
+    <div class="meta-row">
+      <span class="chip"><span class="dot" style="background:var(--success)"></span> 8 screens · clickable</span>
+      <span class="chip">Tailwind v4 tokens · OKLCH</span>
+      <span class="chip">Inter + JetBrains Mono</span>
+      <span class="chip">WCAG 2.1 AA</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="section-label">Marketing</div>
+  <div class="grid">
+    <a class="card" href="landing.html">
+      <div class="preview">
+        <div class="pv-window">
+          <div class="pv-bar"><i></i><i></i><i></i></div>
+          <div class="pv-main" style="height:calc(100% - 16px);align-items:center;justify-content:center;gap:6px">
+            <div class="pv-line accent pv-accent" style="width:62%;height:9px"></div>
+            <div class="pv-line m"></div><div class="pv-line s"></div>
+            <div style="display:flex;gap:5px;margin-top:4px"><div class="pv-line pv-accent" style="width:36px;height:13px"></div><div class="pv-line" style="width:36px;height:13px"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Landing page</h3></div>
+        <p>Responsive marketing site — hero, feature grid, local-vs-cloud split, waitlist CTA.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-label">Onboarding &amp; sign-in</div>
+  <div class="grid">
+    <a class="card" href="onboarding.html">
+      <div class="preview">
+        <div class="pv-window">
+          <div class="pv-bar"><i></i><i></i><i></i></div>
+          <div class="pv-cols">
+            <div class="pv-side"><b></b><i></i><i></i><i></i><i></i></div>
+            <div class="pv-main" style="justify-content:center"><div class="pv-line pv-accent" style="width:56%;height:9px"></div><div class="pv-line m"></div><div class="pv-bub" style="align-self:flex-start;width:70%;height:22px"></div><div class="pv-bub" style="align-self:flex-start;width:70%;height:22px"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Onboarding</h3><span class="tag">macOS</span></div>
+        <p>5-step first-launch wizard — local/cloud mode, OAuth + magic-link sign-in, model download.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+    <a class="card" href="onboarding-ios.html">
+      <div class="preview">
+        <div class="pv-phone"><div class="pv-notch"></div><div class="pv-line pv-accent" style="width:60%;height:9px"></div><div class="pv-line m"></div><div class="pv-line s"></div><div class="pv-bub" style="align-self:stretch;width:100%;height:18px;margin-top:5px"></div><div class="pv-bub" style="align-self:stretch;width:100%;height:18px"></div></div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Onboarding</h3><span class="tag">iOS</span></div>
+        <p>Swipeable iPhone onboarding — bottom-sheet account step, native pager, safe areas.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-label">Product — main chat</div>
+  <div class="grid">
+    <a class="card" href="desktop.html">
+      <div class="preview">
+        <div class="pv-window">
+          <div class="pv-bar"><i></i><i></i><i></i></div>
+          <div class="pv-cols">
+            <div class="pv-side"><b></b><i></i><i></i><i></i></div>
+            <div class="pv-main"><div class="pv-bub"></div><div class="pv-line m"></div><div class="pv-line"></div><div class="pv-line s"></div><div class="pv-bub"></div></div>
+            <div class="pv-side" style="border-right:0;border-left:1px solid var(--border);width:22%"><i></i><i></i><i></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Main chat</h3><span class="tag">macOS · 3-panel</span></div>
+        <p>Sidebar + thread + context. Streaming replies, code blocks, tool calls, searchable model selector.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+    <a class="card" href="mobile-ios.html">
+      <div class="preview">
+        <div class="pv-phone"><div class="pv-notch"></div><div class="pv-bub" style="align-self:flex-end;width:70%;height:16px"></div><div class="pv-bub" style="align-self:flex-start;width:80%;height:26px;background:var(--surface);margin-top:4px"></div><div class="pv-bub" style="align-self:flex-end;width:55%;height:16px;margin-top:4px"></div><div class="pv-line" style="width:100%;height:14px;border-radius:7px;margin-top:auto"></div></div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Main chat</h3><span class="tag">iOS · single-panel</span></div>
+        <p>Single-panel chat with bottom sheets for model, threads &amp; context. Streaming + pull-to-refresh.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-label">Models &amp; settings</div>
+  <div class="grid">
+    <a class="card" href="provider-settings.html">
+      <div class="preview">
+        <div class="pv-window">
+          <div class="pv-bar"><i></i><i></i><i></i></div>
+          <div class="pv-cols">
+            <div class="pv-side"><i></i><b></b><i></i><i></i><i></i></div>
+            <div class="pv-main"><div class="pv-bub" style="align-self:stretch;width:100%;height:24px"></div><div class="pv-bub" style="align-self:stretch;width:100%;height:24px"></div><div class="pv-line m"></div><div class="pv-line s"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Provider settings</h3><span class="tag">macOS</span></div>
+        <p>Encrypted API-key management — reveal, base URLs, live "test connection" with status pills.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+    <a class="card" href="model-hub.html">
+      <div class="preview">
+        <div class="pv-window">
+          <div class="pv-bar"><i></i><i></i><i></i></div>
+          <div class="pv-main" style="height:calc(100% - 16px);display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px">
+            <div class="pv-bub" style="width:100%;height:100%"></div><div class="pv-bub" style="width:100%;height:100%"></div>
+            <div class="pv-bub" style="width:100%;height:100%"></div><div class="pv-bub" style="width:100%;height:100%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>Model Hub</h3><span class="tag">macOS</span></div>
+        <p>Browse, filter and download local &amp; cloud models with live download progress and storage meter.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+    <a class="card" href="widgets.html">
+      <div class="preview">
+        <div class="pv-wg"><div></div><div></div><div></div></div>
+      </div>
+      <div class="card-body">
+        <div class="ct"><h3>OS widgets</h3><span class="tag">iOS</span></div>
+        <p>Home-screen widgets, lock-screen glances, Live Activity and Dynamic Island streaming states.</p>
+        <span class="open">Open <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-label">Design tokens</div>
+  <div class="tokens">
+    <div class="tok-card">
+      <h4>Neutral scale — OKLCH, monochrome</h4>
+      <div class="swatches">
+        <div><div class="sw" style="background:oklch(1 0 0)"></div><div class="sw-cap">bg</div></div>
+        <div><div class="sw" style="background:oklch(0.97 0 0)"></div><div class="sw-cap">surface</div></div>
+        <div><div class="sw" style="background:oklch(0.708 0 0)"></div><div class="sw-cap">ring</div></div>
+        <div><div class="sw" style="background:oklch(0.49 0 0)"></div><div class="sw-cap">muted</div></div>
+        <div><div class="sw" style="background:oklch(0.205 0 0)"></div><div class="sw-cap">primary</div></div>
+        <div><div class="sw" style="background:oklch(0.62 0.13 152)"></div><div class="sw-cap">success</div></div>
+      </div>
+    </div>
+    <div class="tok-card">
+      <h4>Typography &amp; radius</h4>
+      <div class="type-sample">
+        <span class="t1">Private AI. Your data.</span>
+        <span class="t2">Inter — body &amp; UI text, 16px base scale</span>
+        <span class="t3">JetBrains Mono — code, keys, numerics · radius 0.625rem</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="wrap">
+  Atomic Chat · high-fidelity prototype set — 8 screens, shared <span style="font-family:var(--font-mono);font-size:0.78rem">css/atomic.css</span> design system, light/dark. Tagline: <em>Private AI. Your data. Your models.</em>
+</footer>
+
+<script>
+  var KEY = "atomic-theme", root = document.documentElement;
+  function apply(t){ root.setAttribute("data-theme", t); document.querySelectorAll("[data-theme-label]").forEach(function(e){ e.textContent = t==="dark"?"Dark":"Light"; }); }
+  apply(root.getAttribute("data-theme") || "light");
+  function toggleTheme(){ var n = root.getAttribute("data-theme")==="dark"?"light":"dark"; localStorage.setItem(KEY,n); apply(n); }
+</script>
+</body>
+</html>

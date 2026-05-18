@@ -57,6 +57,11 @@ pub fn run() {
         app_builder = app_builder.plugin(tauri_plugin_mlx::init());
     }
 
+    #[cfg(any(target_os = "ios"))]
+    {
+        app_builder = app_builder.plugin(tauri_plugin_mlx_ios::init());
+    }
+
     #[cfg(feature = "foundation-models")]
     {
         app_builder = app_builder.plugin(tauri_plugin_foundation_models::init());

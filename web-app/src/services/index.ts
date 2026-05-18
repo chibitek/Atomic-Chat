@@ -6,6 +6,7 @@
  */
 
 import { isPlatformTauri, isPlatformIOS, isPlatformAndroid } from '@/lib/platform/utils'
+import { isSupabaseConfigured } from '@/lib/supabase'
 
 // Import default services
 import { DefaultThemeService } from './theme/default'
@@ -31,6 +32,8 @@ import { DefaultRAGService } from './rag/default'
 import type { RAGService } from './rag/types'
 import { DefaultUploadsService } from './uploads/default'
 import type { UploadsService } from './uploads/types'
+import { DefaultAuthService } from './auth/default'
+import type { AuthService } from './auth/types'
 
 // Import service types
 import type { ThemeService } from './theme/types'
@@ -55,6 +58,7 @@ import type { ProjectsService } from './projects/types'
 
 export interface ServiceHub {
   // Service getters - all synchronous after initialization
+  auth(): AuthService
   theme(): ThemeService
   window(): WindowService
   events(): EventsService
@@ -79,6 +83,7 @@ export interface ServiceHub {
 }
 
 class PlatformServiceHub implements ServiceHub {
+  private authService: AuthService = new DefaultAuthService()
   private themeService: ThemeService = new DefaultThemeService()
   private windowService: WindowService = new DefaultWindowService()
   private eventsService: EventsService = new DefaultEventsService()
@@ -201,6 +206,17 @@ class PlatformServiceHub implements ServiceHub {
         this.deepLinkService = new deepLinkModule.TauriDeepLinkService()
       }
 
+      // Conditionally swap in Supabase services when configured
+      if (isSupabaseConfigured) {
+        const { SupabaseAuthService } = await import('./auth/supabase-service')
+        const { SupabaseThreadsService } = await import('./threads/supabase')
+        const { SupabaseMessagesService } = await import('./messages/supabase')
+        this.authService = new SupabaseAuthService()
+        this.threadsService = new SupabaseThreadsService()
+        this.messagesService = new SupabaseMessagesService()
+        console.log('[ServiceHub] Supabase services activated')
+      }
+
       this.initialized = true
       console.log('Service hub initialized successfully')
     } catch (error) {
@@ -219,6 +235,11 @@ class PlatformServiceHub implements ServiceHub {
   }
 
   // Service getters - all synchronous after initialization
+  auth(): AuthService {
+    this.ensureInitialized()
+    return this.authService
+  }
+
   theme(): ThemeService {
     this.ensureInitialized()
     return this.themeService

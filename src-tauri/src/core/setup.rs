@@ -45,8 +45,23 @@ pub fn install_extensions<R: Runtime>(app: tauri::AppHandle<R>, force: bool) -> 
     if std::env::var("IS_CLEAN").is_ok() {
         clean_up = true;
     }
-    log::info!("Installing extensions. Clean up: {clean_up}");
-    if !clean_up && extensions_path.exists() {
+
+    //* Reinstall bundled extensions whenever the app version changes. Without this,
+    //* an existing extensions folder makes setup skip installation forever, so an
+    //* updated app never picks up new or fixed extensions. The `.version` marker
+    //* records the app version the current set was installed from; a mismatch (or
+    //* missing marker) forces a clean reinstall.
+    let version_marker = extensions_path.join(".version");
+    let current_version = app.package_info().version.to_string();
+    let version_changed = match fs::read_to_string(&version_marker) {
+        Ok(v) => v.trim() != current_version,
+        Err(_) => true,
+    };
+
+    log::info!(
+        "Installing extensions. Clean up: {clean_up}, app version: {current_version}, version changed: {version_changed}"
+    );
+    if !clean_up && !version_changed && extensions_path.exists() {
         return Ok(());
     }
 
@@ -149,6 +164,12 @@ pub fn install_extensions<R: Runtime>(app: tauri::AppHandle<R>, force: bool) -> 
         serde_json::to_string_pretty(&extensions_list).map_err(|e| e.to_string())?,
     )
     .map_err(|e| e.to_string())?;
+
+    //* Stamp the install with the current app version so the next launch can tell
+    //* whether the bundled extension set is already in sync.
+    if let Err(e) = fs::write(&version_marker, &current_version) {
+        log::warn!("Failed to write extensions version marker: {e}");
+    }
 
     Ok(())
 }

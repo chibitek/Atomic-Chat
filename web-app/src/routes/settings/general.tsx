@@ -32,6 +32,7 @@ import { useHardware } from '@/hooks/useHardware'
 import LanguageSwitcher from '@/containers/LanguageSwitcher'
 import { isRootDir } from '@/utils/path'
 import { useAnalytic } from '@/hooks/useAnalytic'
+import { GlassThemeSwitcher } from '@/components/glass'
 import posthog from 'posthog-js'
 const TOKEN_VALIDATION_TIMEOUT_MS = 10_000
 
@@ -287,6 +288,11 @@ function General() {
               <CardItem
                 title={t('common:language')}
                 actions={<LanguageSwitcher />}
+              />
+              <CardItem
+                title="Liquid Glass Theme"
+                description="Choose between Liquid Glass and Soft Mono skins with theme variants"
+                actions={<GlassThemeSwitcher />}
               />
             </Card>
 

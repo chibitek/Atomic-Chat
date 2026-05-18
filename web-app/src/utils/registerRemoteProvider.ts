@@ -16,9 +16,19 @@ type RegisterProviderRequest = {
 export const LOCAL_PROVIDER_NAMES = ['llamacpp', 'mlx', 'foundation-models'] as const
 export type LocalProviderName = (typeof LOCAL_PROVIDER_NAMES)[number]
 
+/** Providers that expose an OpenAI-compatible API locally and do not
+ *  require an API key for basic operation. */
+export const OPTIONAL_KEY_PROVIDER_NAMES = ['ollama'] as const
+export type OptionalKeyProviderName = (typeof OPTIONAL_KEY_PROVIDER_NAMES)[number]
+
 export function isLocalProvider(providerName: string | undefined | null): boolean {
   if (!providerName) return false
   return (LOCAL_PROVIDER_NAMES as readonly string[]).includes(providerName)
+}
+
+export function isOptionalKeyProvider(providerName: string | undefined | null): boolean {
+  if (!providerName) return false
+  return (OPTIONAL_KEY_PROVIDER_NAMES as readonly string[]).includes(providerName)
 }
 
 /**

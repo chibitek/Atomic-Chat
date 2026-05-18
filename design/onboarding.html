@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atomic Chat — Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;540;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/atomic.css">
+<script>(function(){var t=localStorage.getItem("atomic-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.setAttribute("data-theme","dark");})();</script>
+<style>
+  body { background: var(--surface-2); }
+  .stage {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 2.5rem 1.5rem;
+  }
+  .app-window {
+    width: min(1080px, 100%); height: min(720px, 88vh);
+    border-radius: var(--radius-xl); overflow: hidden;
+    box-shadow: var(--shadow-modal); border: 1px solid var(--border);
+    display: flex; flex-direction: column; background: var(--background);
+  }
+  .ob { display: flex; flex: 1; min-height: 0; }
+
+  /* ---- brand rail ---- */
+  .rail {
+    width: 290px; flex: none; padding: 2rem 1.75rem;
+    background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 2rem;
+  }
+  .brand { display: flex; align-items: center; gap: 0.6rem; }
+  .brand .mark { width: 2rem; height: 2rem; color: var(--foreground); }
+  .brand b { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.02em; }
+  .rail-tag { font-size: 0.92rem; color: var(--muted-foreground); line-height: 1.5; }
+  .steps { display: flex; flex-direction: column; gap: 0.15rem; }
+  .step-item {
+    display: flex; align-items: center; gap: 0.7rem;
+    padding: 0.55rem 0.55rem; border-radius: var(--radius);
+    font-size: 0.86rem; color: var(--muted-foreground);
+    transition: background 0.15s, color 0.15s;
+  }
+  .step-item .num {
+    width: 1.4rem; height: 1.4rem; border-radius: 50%; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.74rem; font-weight: 600;
+    border: 1px solid var(--border-strong); background: var(--background);
+  }
+  .step-item.active { color: var(--foreground); background: var(--accent); font-weight: 540; }
+  .step-item.active .num { background: var(--primary); color: var(--primary-foreground); border-color: transparent; }
+  .step-item.done .num { background: var(--foreground); color: var(--background); border-color: transparent; }
+  .step-item.done { color: var(--foreground); }
+  .rail-foot { margin-top: auto; font-size: 0.78rem; color: var(--muted-foreground); }
+
+  /* ---- content area ---- */
+  .content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .content-scroll { flex: 1; overflow-y: auto; padding: 3rem 3.25rem; }
+  .pane { display: none; animation: fade-up 0.34s var(--ease); }
+  .pane.show { display: block; }
+  @keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .pane h1 { font-size: 1.7rem; margin-bottom: 0.5rem; }
+  .pane .lede { color: var(--muted-foreground); font-size: 1rem; max-width: 42ch; margin-bottom: 1.85rem; }
+
+  .hero-mark {
+    width: 4.25rem; height: 4.25rem; color: var(--foreground);
+    margin-bottom: 1.5rem;
+  }
+  .hero-mark .orbits ellipse { transform-box: fill-box; transform-origin: center; }
+  .hero-mark .o1 { animation: spin 9s linear infinite; }
+  .hero-mark .o2 { animation: spin 14s linear infinite reverse; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* choice cards */
+  .choices { display: grid; gap: 0.85rem; }
+  .choice {
+    display: flex; gap: 1rem; padding: 1.15rem 1.2rem; text-align: left;
+    border: 1.5px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--surface); transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    position: relative;
+  }
+  .choice:hover { border-color: var(--border-strong); }
+  .choice.sel { border-color: var(--foreground); box-shadow: 0 0 0 3px oklch(0.708 0 0 / 0.15); }
+  .choice .ic {
+    width: 2.6rem; height: 2.6rem; flex: none; border-radius: var(--radius);
+    background: var(--surface-2); display: flex; align-items: center; justify-content: center;
+  }
+  .choice .ic svg { width: 1.35rem; height: 1.35rem; }
+  .choice h3 { margin-bottom: 0.18rem; }
+  .choice p { font-size: 0.86rem; color: var(--muted-foreground); }
+  .choice .pick {
+    position: absolute; top: 1.1rem; right: 1.1rem;
+    width: 1.3rem; height: 1.3rem; border-radius: 50%;
+    border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center;
+  }
+  .choice.sel .pick { background: var(--foreground); border-color: var(--foreground); }
+  .choice .pick svg { width: 0.85rem; height: 0.85rem; color: var(--background); opacity: 0; }
+  .choice.sel .pick svg { opacity: 1; }
+  .tag-rec {
+    font-size: 0.66rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--success); margin-left: 0.5rem;
+  }
+
+  /* auth */
+  .auth-tabs { display: flex; gap: 0.25rem; background: var(--surface-2); padding: 0.25rem; border-radius: var(--radius); margin-bottom: 1.4rem; width: fit-content; }
+  .auth-tab { padding: 0.42rem 1rem; border-radius: var(--radius-sm); font-size: 0.86rem; font-weight: 540; color: var(--muted-foreground); }
+  .auth-tab.active { background: var(--background); color: var(--foreground); box-shadow: var(--shadow-subtle); }
+  .auth-form { max-width: 360px; display: flex; flex-direction: column; gap: 0.85rem; }
+  .oauth-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .or-line { display: flex; align-items: center; gap: 0.75rem; color: var(--muted-foreground); font-size: 0.78rem; margin: 0.2rem 0; }
+  .or-line::before, .or-line::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  /* model download */
+  .model-pick { display: grid; gap: 0.6rem; max-width: 440px; }
+  .mrow {
+    display: flex; align-items: center; gap: 0.85rem; padding: 0.85rem 0.95rem;
+    border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--surface);
+  }
+  .mrow.sel { border-color: var(--foreground); }
+  .mrow .mname { font-weight: 540; font-size: 0.9rem; }
+  .mrow .mmeta { font-size: 0.78rem; color: var(--muted-foreground); }
+  .progress { height: 0.4rem; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin-top: 0.9rem; }
+  .progress > i { display: block; height: 100%; width: 0%; background: var(--foreground); border-radius: 99px; transition: width 0.3s linear; }
+  .dl-status { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--muted-foreground); margin-top: 0.5rem; }
+
+  /* ready */
+  .ready-check {
+    width: 3.6rem; height: 3.6rem; border-radius: 50%; background: var(--success);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 1.4rem;
+  }
+  .ready-check svg { width: 1.9rem; height: 1.9rem; color: #fff; }
+  .summary { display: grid; gap: 0.5rem; max-width: 380px; margin: 1.5rem 0; }
+  .summary .srow { display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.8rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .summary .srow svg { width: 1rem; height: 1rem; color: var(--success); flex: none; }
+
+  /* footer nav */
+  .ob-foot {
+    flex: none; display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 3.25rem; border-top: 1px solid var(--border); background: var(--surface);
+  }
+  .dotbar { display: flex; gap: 0.4rem; }
+  .dotbar i { width: 0.45rem; height: 0.45rem; border-radius: 99px; background: var(--border-strong); transition: width 0.2s, background 0.2s; }
+  .dotbar i.on { width: 1.4rem; background: var(--foreground); }
+
+  .skip-link { font-size: 0.85rem; color: var(--muted-foreground); }
+  .skip-link:hover { color: var(--foreground); }
+
+  @media (max-width: 720px) {
+    .rail { display: none; }
+    .content-scroll, .ob-foot { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .app-window { height: 92vh; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <main class="app-window" role="application" aria-label="Atomic Chat onboarding">
+
+    <!-- macOS title bar -->
+    <div class="titlebar">
+      <div class="traffic"><span class="tc"></span><span class="tm"></span><span class="tz"></span></div>
+      <div class="titlebar-title">Atomic Chat — Setup</div>
+      <button class="icon-btn" style="-webkit-app-region:no-drag" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36 6.36-.7-.7M6.34 6.34l-.7-.7m12.72 0-.7.7M6.34 17.66l-.7.7"/><circle cx="12" cy="12" r="4"/></svg>
+      </button>
+    </div>
+
+    <div class="ob">
+      <!-- brand rail -->
+      <aside class="rail">
+        <div class="brand">
+          <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="16" r="3.2" fill="currentColor"/>
+            <g fill="none" stroke="currentColor" stroke-width="1.6">
+              <ellipse cx="16" cy="16" rx="13" ry="5.3"/>
+              <ellipse cx="16" cy="16" rx="13" ry="5.3" transform="rotate(60 16 16)"/>
+              <ellipse cx="16" cy="16" rx="13" ry="5.3" transform="rotate(120 16 16)"/>
+            </g>
+          </svg>
+          <b>Atomic&nbsp;Chat</b>
+        </div>
+        <p class="rail-tag">Private AI. Your data, your models — running where you decide.</p>
+        <nav class="steps" id="steps" aria-label="Setup progress">
+          <div class="step-item" data-step="0"><span class="num">1</span> Welcome</div>
+          <div class="step-item" data-step="1"><span class="num">2</span> Choose how it runs</div>
+          <div class="step-item" data-step="2"><span class="num">3</span> Your account</div>
+          <div class="step-item" data-step="3"><span class="num">4</span> First model</div>
+          <div class="step-item" data-step="4"><span class="num">5</span> Ready</div>
+        </nav>
+        <div class="rail-foot">Open-source · v2.0 · Step <span id="rail-x">1</span> of 5</div>
+      </aside>
+
+      <!-- content -->
+      <section class="content">
+        <div class="content-scroll">
+
+          <!-- STEP 0 — welcome -->
+          <div class="pane show" data-pane="0">
+            <svg class="hero-mark" viewBox="0 0 32 32" aria-hidden="true">
+              <circle cx="16" cy="16" r="3.2" fill="currentColor"/>
+              <g class="orbits" fill="none" stroke="currentColor" stroke-width="1.5">
+                <ellipse class="o1" cx="16" cy="16" rx="13" ry="5.3"/>
+                <ellipse class="o2" cx="16" cy="16" rx="13" ry="5.3" transform="rotate(60 16 16)"/>
+                <ellipse class="o1" cx="16" cy="16" rx="13" ry="5.3" transform="rotate(120 16 16)"/>
+              </g>
+            </svg>
+            <h1>Welcome to Atomic Chat</h1>
+            <p class="lede">A ChatGPT-class assistant that can run entirely on your machine — no account required, no data leaving your device unless you say so.</p>
+            <div class="row gap-3" style="flex-wrap:wrap">
+              <span class="badge"><span class="dot dot-local"></span> Local LLMs</span>
+              <span class="badge"><span class="dot dot-cloud"></span> Cloud providers</span>
+              <span class="badge"><span class="dot dot-live"></span> Real-time sync</span>
+              <span class="badge">🔒 Encrypted keys</span>
+            </div>
+          </div>
+
+          <!-- STEP 1 — mode -->
+          <div class="pane" data-pane="1">
+            <h1>How should Atomic run?</h1>
+            <p class="lede">Pick one or both. You can switch any model mid-conversation later — nothing here is permanent.</p>
+            <div class="choices">
+              <button class="choice" data-mode="local" onclick="toggleMode(this)">
+                <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8m-4-4v4"/></svg></span>
+                <div>
+                  <h3>Run privately on-device<span class="tag-rec">Most private</span></h3>
+                  <p>llama.cpp & Apple MLX models run offline. Nothing is sent anywhere.</p>
+                </div>
+                <span class="pick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
+              </button>
+              <button class="choice" data-mode="cloud" onclick="toggleMode(this)">
+                <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 18a4 4 0 0 1 0-8 6 6 0 0 1 11.5-1.5A3.5 3.5 0 0 1 18 18H7Z"/></svg></span>
+                <div>
+                  <h3>Connect cloud providers</h3>
+                  <p>Bring your own keys for OpenAI, Claude, Groq, Ollama and more.</p>
+                </div>
+                <span class="pick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- STEP 2 — account -->
+          <div class="pane" data-pane="2">
+            <h1>Sync across your devices</h1>
+            <p class="lede">An account keeps conversations end-to-end encrypted and live across macOS, iOS and Web. It's optional — local chats work without it.</p>
+            <div class="auth-tabs" role="tablist">
+              <button class="auth-tab active" role="tab" onclick="authTab(this,'in')">Sign in</button>
+              <button class="auth-tab" role="tab" onclick="authTab(this,'up')">Create account</button>
+            </div>
+            <form class="auth-form" onsubmit="event.preventDefault();go(1)">
+              <div class="oauth-row">
+                <button type="button" class="btn btn-secondary">
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1a6.2 6.2 0 0 1 0-12.4c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.1 2.6 14.8 1.6 12 1.6a10.4 10.4 0 1 0 0 20.8c6 0 10-4.2 10-10.1 0-.7-.1-1.2-.2-1.8H12Z"/></svg>
+                  Google
+                </button>
+                <button type="button" class="btn btn-secondary">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 1.5a10.5 10.5 0 0 0-3.32 20.46c.52.1.71-.23.71-.5v-1.8c-2.9.63-3.52-1.4-3.52-1.4-.48-1.2-1.16-1.53-1.16-1.53-.95-.65.07-.64.07-.64 1.05.08 1.6 1.08 1.6 1.08.94 1.6 2.45 1.14 3.05.87.1-.68.37-1.14.66-1.4-2.32-.26-4.76-1.16-4.76-5.16 0-1.14.4-2.07 1.07-2.8-.1-.27-.46-1.33.1-2.77 0 0 .88-.28 2.87 1.07a10 10 0 0 1 5.22 0c2-1.35 2.87-1.07 2.87-1.07.57 1.44.22 2.5.1 2.77.68.73 1.07 1.66 1.07 2.8 0 4.01-2.44 4.9-4.77 5.15.38.33.71.97.71 1.96v2.9c0 .28.19.61.72.5A10.5 10.5 0 0 0 12 1.5Z"/></svg>
+                  GitHub
+                </button>
+              </div>
+              <div class="or-line">or with email</div>
+              <div class="field">
+                <label class="label" for="ob-email">Email</label>
+                <input class="input" id="ob-email" type="email" placeholder="you@example.com" autocomplete="email" required>
+              </div>
+              <div class="field" id="pw-field">
+                <label class="label" for="ob-pw">Password</label>
+                <input class="input" id="ob-pw" type="password" placeholder="••••••••" autocomplete="current-password">
+              </div>
+              <button class="btn btn-primary btn-block" type="submit">Continue</button>
+              <button class="btn btn-ghost btn-block" type="button" onclick="go(1)">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 6-10 7L2 6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>
+                Email me a magic link instead
+              </button>
+            </form>
+          </div>
+
+          <!-- STEP 3 — first model -->
+          <div class="pane" data-pane="3">
+            <h1>Download your first local model</h1>
+            <p class="lede">Picked because you chose on-device mode. These run fully offline — pick a size that fits your machine.</p>
+            <div class="model-pick" id="modelPick">
+              <button class="mrow sel" data-model="Llama 3.2 3B" data-size="1.9 GB" onclick="pickModel(this)">
+                <span class="avatar avatar-sq">🦙</span>
+                <div class="grow">
+                  <div class="mname">Llama 3.2 · 3B Instruct</div>
+                  <div class="mmeta">1.9 GB · Q4 · fast, great for laptops</div>
+                </div>
+                <span class="badge badge-cap">Recommended</span>
+              </button>
+              <button class="mrow" data-model="Qwen 2.5 7B" data-size="4.4 GB" onclick="pickModel(this)">
+                <span class="avatar avatar-sq">🌐</span>
+                <div class="grow">
+                  <div class="mname">Qwen 2.5 · 7B Instruct</div>
+                  <div class="mmeta">4.4 GB · Q4 · stronger reasoning</div>
+                </div>
+              </button>
+              <button class="mrow" data-model="Phi-3.5 Mini" data-size="2.2 GB" onclick="pickModel(this)">
+                <span class="avatar avatar-sq">🍎</span>
+                <div class="grow">
+                  <div class="mname">Phi-3.5 Mini · MLX</div>
+                  <div class="mmeta">2.2 GB · optimised for Apple Silicon</div>
+                </div>
+              </button>
+            </div>
+            <div id="dlBox" style="max-width:440px;margin-top:1.5rem;display:none">
+              <div class="progress"><i id="dlBar"></i></div>
+              <div class="dl-status"><span id="dlLabel">Preparing…</span><span id="dlPct">0%</span></div>
+            </div>
+          </div>
+
+          <!-- STEP 4 — ready -->
+          <div class="pane" data-pane="4">
+            <div class="ready-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+            <h1>You're all set</h1>
+            <p class="lede">Atomic Chat is ready. Here's what we configured — change any of it later in Settings.</p>
+            <div class="summary" id="summary"></div>
+            <a class="btn btn-primary btn-lg" href="desktop.html">
+              Start your first chat
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+            </a>
+          </div>
+
+        </div>
+
+        <!-- footer -->
+        <footer class="ob-foot">
+          <button class="btn btn-ghost" id="backBtn" onclick="go(-1)">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m6 6-6-6 6-6"/></svg>
+            Back
+          </button>
+          <div class="dotbar" id="dots"></div>
+          <div class="row gap-3">
+            <a class="skip-link" id="skipLink" href="desktop.html">Skip setup</a>
+            <button class="btn btn-primary" id="nextBtn" onclick="go(1)">Continue</button>
+          </div>
+        </footer>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="js/theme.js"></script>
+<script>
+  var step = 0, TOTAL = 5;
+  var state = { local: true, cloud: false, model: "Llama 3.2 3B", account: false };
+
+  // build dot bar
+  var dots = document.getElementById("dots");
+  for (var i = 0; i < TOTAL; i++) dots.appendChild(document.createElement("i"));
+
+  function visiblePanes() {
+    // step 3 (first model) only applies when local mode is on
+    return state.local ? [0,1,2,3,4] : [0,1,2,4];
+  }
+
+  function render() {
+    var panes = visiblePanes();
+    var paneIdx = panes[step];
+    document.querySelectorAll(".pane").forEach(function (p) {
+      p.classList.toggle("show", +p.dataset.pane === paneIdx);
+    });
+    // steps rail
+    document.querySelectorAll(".step-item").forEach(function (s) {
+      var si = +s.dataset.step;
+      var pos = panes.indexOf(si);
+      s.classList.toggle("active", si === paneIdx);
+      s.classList.toggle("done", pos > -1 && pos < step);
+      s.style.display = (si === 3 && !state.local) ? "none" : "";
+    });
+    // dots
+    [].forEach.call(dots.children, function (d, idx) {
+      d.classList.toggle("on", idx === step);
+      d.style.display = idx < panes.length ? "" : "none";
+    });
+    document.getElementById("rail-x").textContent = step + 1;
+    document.getElementById("backBtn").style.visibility = step === 0 ? "hidden" : "visible";
+    document.getElementById("skipLink").style.display = paneIdx === 4 ? "none" : "";
+    var next = document.getElementById("nextBtn");
+    next.style.display = paneIdx === 4 ? "none" : "inline-flex";
+    next.textContent = paneIdx === 0 ? "Get started" : (paneIdx === 3 ? "Finish setup" : "Continue");
+    if (paneIdx === 4) buildSummary();
+    if (paneIdx === 3) startDownload();
+  }
+
+  function go(dir) {
+    var panes = visiblePanes();
+    var nextStep = step + dir;
+    if (nextStep < 0 || nextStep >= panes.length) return;
+    step = nextStep;
+    render();
+  }
+
+  function toggleMode(el) {
+    var m = el.dataset.mode;
+    state[m] = !state[m];
+    el.classList.toggle("sel", state[m]);
+    if (!state.local && !state.cloud) { state[m] = true; el.classList.add("sel"); } // keep ≥1
+  }
+
+  var authMode = "in";
+  function authTab(el, mode) {
+    authMode = mode;
+    document.querySelectorAll(".auth-tab").forEach(function (t) { t.classList.remove("active"); });
+    el.classList.add("active");
+    document.getElementById("pw-field").querySelector("label").textContent =
+      mode === "up" ? "Create a password" : "Password";
+  }
+
+  function pickModel(el) {
+    document.querySelectorAll(".mrow").forEach(function (r) { r.classList.remove("sel"); });
+    el.classList.add("sel");
+    state.model = el.dataset.model;
+    dlStarted = false;
+    document.getElementById("dlBox").style.display = "none";
+    startDownload();
+  }
+
+  var dlStarted = false;
+  function startDownload() {
+    if (dlStarted) return;
+    dlStarted = true;
+    var box = document.getElementById("dlBox");
+    var bar = document.getElementById("dlBar");
+    var pct = document.getElementById("dlPct");
+    var lbl = document.getElementById("dlLabel");
+    var sel = document.querySelector(".mrow.sel");
+    box.style.display = "block";
+    var p = 0;
+    var size = sel ? sel.dataset.size : "1.9 GB";
+    lbl.textContent = "Downloading " + state.model + "…";
+    var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var tick = setInterval(function () {
+      p += reduce ? 100 : (4 + Math.random() * 9);
+      if (p >= 100) { p = 100; clearInterval(tick); lbl.textContent = state.model + " · ready (" + size + ")"; }
+      bar.style.width = p + "%";
+      pct.textContent = Math.round(p) + "%";
+    }, reduce ? 0 : 220);
+  }
+
+  function buildSummary() {
+    var rows = [];
+    if (state.local) rows.push(["On-device models enabled — " + state.model + " installed"]);
+    if (state.cloud) rows.push(["Cloud providers ready to connect in Settings"]);
+    rows.push(["Conversations encrypted with your device key"]);
+    rows.push([state.account ? "Signed in — sync active across devices" : "Running offline — sign in anytime to sync"]);
+    document.getElementById("summary").innerHTML = rows.map(function (r) {
+      return '<div class="srow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>' + r[0] + '</div>';
+    }).join("");
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight") go(1);
+    if (e.key === "ArrowLeft") go(-1);
+  });
+
+  render();
+</script>
+</body>
+</html>
