@@ -1,10 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { createFileRoute, useParams, useSearch } from '@tanstack/react-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createFileRoute, useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 
-import HeaderPage from '@/containers/HeaderPage'
 import { useThreads } from '@/hooks/useThreads'
-import ChatInput from '@/containers/ChatInput'
 import { useShallow } from 'zustand/react/shallow'
 import { MessageItem } from '@/containers/MessageItem'
 
@@ -57,7 +55,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { IconAlertCircle } from '@tabler/icons-react'
 import { useToolApproval } from '@/hooks/useToolApproval'
-import DropdownModelProvider from '@/containers/DropdownModelProvider'
 import { ExtensionTypeEnum, VectorDBExtension } from '@janhq/core'
 import { ExtensionManager } from '@/lib/extension'
 import { Shimmer } from '@/components/ai-elements/shimmer'
@@ -91,8 +88,6 @@ export const Route = createFileRoute('/threads/$threadId')({
 function ThreadDetail() {
   const serviceHub = useServiceHub()
   const { threadId } = useParams({ from: Route.id })
-  const search = useSearch({ from: Route.id })
-  const searchThreadModel = search.threadModel
   const setCurrentThreadId = useThreads((state) => state.setCurrentThreadId)
   const setCurrentAssistant = useAssistant((state) => state.setCurrentAssistant)
   const assistants = useAssistant((state) => state.assistants)
@@ -185,7 +180,6 @@ function ThreadDetail() {
     sendMessage,
     regenerate,
     setMessages: setChatMessages,
-    stop,
     addToolOutput,
     updateRagToolsAvailability,
     setContinueFromContent,
@@ -734,17 +728,6 @@ function ThreadDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadId])
 
-  // Handle submit from ChatInput
-  const handleSubmit = useCallback(
-    async (
-      text: string,
-      files?: Array<{ type: string; mediaType: string; url: string }>
-    ) => {
-      await processAndSendMessage(text, files)
-    },
-    [processAndSendMessage]
-  )
-
   // Handle regenerate from any message (user or assistant)
   // - For user messages: keeps the user message, deletes all after, regenerates assistant response
   // - For assistant messages: finds the closest preceding user message, deletes from there
@@ -962,18 +945,10 @@ function ThreadDetail() {
     }
   }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const threadModel = useMemo(
-    () => searchThreadModel ?? thread?.model,
-    [searchThreadModel, thread]
-  )
-
   return (
-    <div className="flex flex-col h-[calc(100dvh-(env(safe-area-inset-bottom)+env(safe-area-inset-top)))]">
-      <HeaderPage>
-        <div className="flex items-center justify-between w-full pr-2">
-          <DropdownModelProvider />
-        </div>
-      </HeaderPage>
+    <div className="flex flex-col h-full">
+      {/* Chat header + composer are owned by the layout (DesktopLayout /
+          MobileLayout). This route renders only the message list. */}
       <div className="flex flex-1 flex-col h-full overflow-hidden">
         {/* Messages Area */}
         <div className="flex-1 relative">
@@ -1099,16 +1074,6 @@ function ThreadDetail() {
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
-        </div>
-
-        {/* Chat Input - Fixed at bottom */}
-        <div className="py-4 mx-auto w-full md:w-4/5 xl:w-4/6">
-          <ChatInput
-            model={threadModel}
-            onSubmit={handleSubmit}
-            onStop={stop}
-            chatStatus={status}
-          />
         </div>
       </div>
     </div>
