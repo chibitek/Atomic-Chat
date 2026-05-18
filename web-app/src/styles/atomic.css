@@ -1070,7 +1070,8 @@ h3 { font-size: 1.125rem; }
   flex: none;
   height: 2.7rem;
   margin: 0.7rem 0.7rem 0.45rem;
-  padding: 0 0.45rem 0 0.7rem;
+  /* Left padding clears the macOS traffic-light buttons (overlay title bar). */
+  padding: 0 0.45rem 0 5rem;
   border-radius: 99px;
   background: rgba(var(--glass-rgb), var(--glass-o-thin));
   -webkit-backdrop-filter: blur(var(--blur-md)) saturate(180%);

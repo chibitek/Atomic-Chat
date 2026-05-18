@@ -7,7 +7,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { useThreads } from '@/hooks/useThreads'
 import { useModelProvider } from '@/hooks/useModelProvider'
 import { useMessages } from '@/hooks/useMessages'
@@ -18,7 +18,12 @@ import { defaultModel } from '@/lib/models'
 
 export function DesktopLayout({ children }: { children?: React.ReactNode }) {
   const navigate = useNavigate()
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  // The Context inspector is chat-specific — hide it on Settings/logs routes.
+  const hideContext =
+    pathname.startsWith('/settings') || pathname.startsWith('/logs')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [contextOpen, setContextOpen] = useState(true)
   const [modelOpen, setModelOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -108,8 +113,9 @@ export function DesktopLayout({ children }: { children?: React.ReactNode }) {
 
   return (
     <div className="win">
-      {/* Floating Glass Toolbar */}
-      <header className="titlebar">
+      {/* Floating Glass Toolbar — data-tauri-drag-region makes the window
+          draggable by this bar (Tauri ignores CSS -webkit-app-region). */}
+      <header className="titlebar" data-tauri-drag-region>
         <button
           className="icon-btn"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -321,11 +327,17 @@ export function DesktopLayout({ children }: { children?: React.ReactNode }) {
           <DesktopComposer threadId={currentThreadId} />
         </main>
 
-        {/* Right Inspector */}
+        {/* Right Inspector — chat-only; hidden on Settings/logs routes */}
+        {!hideContext && contextOpen && (
         <aside className="context">
           <div className="ctx-head">
             <span className="ctx-title">Context</span>
-            <button className="icon-btn" aria-label="Close">
+            <button
+              className="icon-btn"
+              type="button"
+              aria-label="Close"
+              onClick={() => setContextOpen(false)}
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
@@ -416,6 +428,7 @@ export function DesktopLayout({ children }: { children?: React.ReactNode }) {
             </div>
           </div>
         </aside>
+        )}
       </div>
     </div>
   )
