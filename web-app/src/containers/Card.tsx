@@ -43,7 +43,9 @@ export function CardItem({
         )}
       >
         <div className="space-y-1.5">
-          <h1 className="font-medium text-foreground">{title}</h1>
+          {/* div, not <h1>: a row label — and a bare <h1> picks up the
+              global glass heading rule in atomic.css (font-size: 2rem). */}
+          <div className="font-medium text-foreground text-sm">{title}</div>
           {description && (
             <span className="text-muted-foreground leading-normal">
               {description}
@@ -81,9 +83,9 @@ export function Card({ title, children, header, className }: CardProps) {
       )}
     >
       {title && (
-        <h1 className="text-foreground font-studio font-medium text-base mb-4">
+        <div className="text-foreground font-studio font-medium text-base mb-4">
           {title}
-        </h1>
+        </div>
       )}
       {header && header}
       {children}
